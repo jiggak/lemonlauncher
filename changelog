@@ -1,0 +1,10 @@
+0.0.2
+-------------------
+
+- fixed snap shot generation, generates numbered snaps
+- added hidden menu and games. prefix name with a '.'
+
+0.0.1 - Feb 24/2003
+-------------------
+
+- initial version
