@@ -14,7 +14,7 @@
 #include "misc.h"
 #include "lemonmenu.h"
 
-#define VERSION "0.0.1"
+#define VERSION "0.0.2"
 
 Options 				g_Options;
 Log						g_Log;
@@ -73,7 +73,7 @@ bool UnInit()
 	return true;
 }
 
-bool LoadMenuList()
+bool LoadMenuList(bool loadHidden)
 {
 	g_tMenuItems.SetOwnsElements(true);
 
@@ -109,16 +109,25 @@ bool LoadMenuList()
 		// find the name
 		pMenu->pszName = strdup(c);
 
-		g_tMenuItems.Add(pMenu);
+		// add the menu to the list
+		if (pMenu->pszName[0] != '.' || loadHidden)
+		{
+			if (pMenu->pszName[0] == '.') memmove(pMenu->pszName, pMenu->pszName + 1, strlen(pMenu->pszName));
 
-		g_Log.Log3("LoadMenuList: menu %s [id = %d][parent = %d] loaded\n",
-		           pMenu->pszName, pMenu->iMenuId, pMenu->iParent);
+			g_tMenuItems.Add(pMenu);
 
+			g_Log.Log3("LoadMenuList: menu %s [id = %d][parent = %d] loaded\n",
+		               pMenu->pszName, pMenu->iMenuId, pMenu->iParent);
+		}
+		else
+		{
+			delete pMenu;
+		}
 	}
 	return true;
 }
 
-bool LoadGameList()
+bool LoadGameList(bool loadHidden)
 {
 	char szGameFile[1024];
 	sprintf(szGameFile, "%s/.lemonlauncher/gamelist", getenv("HOME"));
@@ -168,9 +177,18 @@ bool LoadGameList()
 			pGame->pszParams = strdup(c);
 		}
 
-		g_tMenuItems.Add(pGame);
+		if (pGame->pszTitle[0] != '.' || loadHidden)
+		{
+			if (pGame->pszName[0] == '.') memmove(pGame->pszName, pGame->pszName + 1, strlen(pGame->pszName));
 
-		g_Log.Log3("LoadGameList: %s\n", pGame->pszTitle ? pGame->pszTitle : pGame->pszName);
+			g_tMenuItems.Add(pGame);
+
+			g_Log.Log3("LoadGameList: %s\n", pGame->pszTitle ? pGame->pszTitle : pGame->pszName);
+		}
+		else
+		{
+			delete pGame;
+		}
 	}
 	fclose(fp);
 
@@ -183,8 +201,16 @@ bool BuildMenus()
 {
 	int menuCnt = 0;
 	for (int i = 0; i < g_tMenuItems.GetCount(); i++)
+	{
 		if (g_tMenuItems[i]->GetType() == TYPE_MENU)
-			menuCnt++;
+		{
+			Menu* pMenu = (Menu*)g_tMenuItems[i];
+			if (pMenu->iMenuId > menuCnt - 1)
+				menuCnt = pMenu->iMenuId + 1;
+		}
+	}
+
+	g_Log.Log3("BuildMenus: building %d menus\n", menuCnt);
 
 	g_ptMenus = new SortTable<ListItem>[menuCnt];
 
@@ -196,12 +222,14 @@ bool BuildMenus()
 			{
 				Menu* pMenu = (Menu*)g_tMenuItems[i];
 				if (pMenu->iMenuId == 0 && pMenu->iParent == 0)	break;
-				g_ptMenus[g_tMenuItems[i]->iParent].Add(g_tMenuItems[i]);
+				if (g_tMenuItems[i]->iParent < menuCnt)
+					g_ptMenus[g_tMenuItems[i]->iParent].Add(g_tMenuItems[i]);
 				break;
 			}
 			case TYPE_MAMEGAME:
 			{
-				g_ptMenus[g_tMenuItems[i]->iParent].Add(g_tMenuItems[i]);
+				if (g_tMenuItems[i]->iParent < menuCnt)
+					g_ptMenus[g_tMenuItems[i]->iParent].Add(g_tMenuItems[i]);
 				break;
 			}
 		}
@@ -222,11 +250,11 @@ bool Go()
 	if (!res) return false;
 
 	// load the menu list
-	res = LoadMenuList();
+	res = LoadMenuList(false);
 	if (!res) return false;
 
 	// load the game list
-	res = LoadGameList();
+	res = LoadGameList(false);
 	if (!res) return false;
 
 	// build the menus

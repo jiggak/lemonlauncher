@@ -58,6 +58,7 @@ bool Options:: Load()
 	exit		= iniparser_getint(opts,"keys:exit", SDLK_ESCAPE);
 	snap		= iniparser_getint(opts,"keys:snap", SDLK_5);
 	reload		= iniparser_getint(opts,"keys:reload", SDLK_6);
+	showhide    = iniparser_getint(opts,"keys:hideshow", SDLK_1);
 
 	p1up        = iniparser_getint(opts,"keys:p1up", SDLK_UP);
 	p1down		= iniparser_getint(opts,"keys:p1down", SDLK_DOWN);

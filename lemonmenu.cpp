@@ -17,8 +17,8 @@
 
 #define UPDATESNAP	1
 
-bool LoadMenuList();
-bool LoadGameList();
+bool LoadMenuList(bool loadHidden);
+bool LoadGameList(bool loadHidden);
 bool BuildMenus();
 
 extern Options     				g_Options;
@@ -46,6 +46,8 @@ LemonMenu::LemonMenu(SDL_Surface* p)
 
 	iCurItem = 0;
 	iCurMenu = 0;
+
+	bShowHidden = false;
 
 	const char* pszFontName = g_Options.font;
 
@@ -88,6 +90,8 @@ LemonMenu::~LemonMenu()
 
 bool LemonMenu::MenuLoop()
 {
+	g_Log.Log3("MenuLoop: starting render loop\n");
+
 	HideCursor();
 	RenderAll();
 	SelChanged();
@@ -135,6 +139,9 @@ bool LemonMenu::MenuLoop()
 
 				if (key == g_Options.reload)
 					HandleReload();
+
+				if (key == g_Options.showhide)
+					HandleShowHide();
 
 				break;
 			}
@@ -523,10 +530,12 @@ void LemonMenu::HandleSnap()
 
 	do
 	{
-		sprintf(szSnap, "%s/.lemonlauncher/snap%d.bmp", getenv("HOME"), idx);
-	} while (access(szSnap, F_OK) != 0);
+		sprintf(szSnap, "%s/.lemonlauncher/snap%d.bmp", getenv("HOME"), idx++);
+		g_Log.Log4("HandleSnap: trying to create file %s\n", szSnap);
+	} while (access(szSnap, F_OK) == 0);
 
-	SDL_SaveBMP(pScreen, szSnap);			 
+	g_Log.Log3("HandleSnap: Saving snap shot %s\n", szSnap);
+	SDL_SaveBMP(pScreen, szSnap);
 }
 
 void LemonMenu::HandleUpMenu()
@@ -572,15 +581,29 @@ void LemonMenu::HandleActivate()
 
 void LemonMenu::HandleReload()
 {
+	g_Log.Log2("HandleReload: reloading menu lists\n");
+
 	g_tMenuItems.DeleteAll();
 	delete[] g_ptMenus;
 
-	LoadMenuList();
-	LoadGameList();
+	LoadMenuList(bShowHidden);
+	LoadGameList(bShowHidden);
 	BuildMenus();
 
 	iCurMenu = 0;
 	iCurItem = 0;
+
+	SelChanged();
+	RenderAll();
+}
+
+void LemonMenu::HandleShowHide()
+{
+	g_Log.Log2("HandleHideShow: changing hidden status\n");
+
+	bShowHidden = !bShowHidden;
+
+	HandleReload();
 }
 
 void LemonMenu::HideCursor()

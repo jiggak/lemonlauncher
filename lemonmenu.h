@@ -21,6 +21,7 @@ protected:
 	void HandleDownMenu();
 	void HandleActivate();
 	void HandleReload();
+	void HandleShowHide();
 
 	bool RenderAll();
 
@@ -53,6 +54,8 @@ protected:
 	SDL_Surface*	pSnapSurface;
 
 	SDL_TimerID		updateTimer;
+
+	bool bShowHidden;
 };
 
 #endif

@@ -30,6 +30,7 @@ public:
 	int exit;
 	int snap;
 	int reload;
+	int showhide;
 
 	int p1up;
 	int p1down;
