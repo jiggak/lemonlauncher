@@ -23,7 +23,13 @@ Options::~Options()
 bool Options:: Load()
 {
 	char szOptFile[1024];
+
+#ifdef WIN32
+    strcpy(szOptFile, "lemonlauncher-win.ini");
+#else
 	sprintf(szOptFile, "%s/.lemonlauncher/lemonlauncher.ini", getenv("HOME"));
+#endif
+
 	FILE* fp = fopen(szOptFile, "rt");
 	if (fp == NULL)
 	{
@@ -39,6 +45,13 @@ bool Options:: Load()
 		return false;
 	}
 
+#ifdef WIN32
+    bool win32 = true;
+#else
+    bool win32 = false;
+#endif
+
+
 	debug      	= iniparser_getboolean(opts, "main:debug", 0);
 	loglevel	= iniparser_getint(opts, "main:loglevel", 4);
 
@@ -51,9 +64,10 @@ bool Options:: Load()
 	listsize    = iniparser_getint(opts,"screen:listsize", 30);
 	pagesize    = iniparser_getint(opts,"screen:pagesize", 15);
 
-	mamepath    = iniparser_getstring(opts, "mame:path", "xmame.SDL");
-	mameparams  = iniparser_getstring(opts, "mame:params", "-fullscreen");
-	mamesnaps   = iniparser_getstring(opts, "mame:snaps", "/usr/local/share/xmame/snap");
+    mamepath    = iniparser_getstring(opts, "mame:path", win32 ? (char*)"mame.exe" : (char*)"xmame.SDL");
+    mameparams  = iniparser_getstring(opts, "mame:params", win32 ? (char*)"" : (char*)"-fullscreen");
+    mamesnaps   = iniparser_getstring(opts, "mame:snaps", win32 ? (char*)"c:\\mame\\xnap" : (char*)"/usr/local/share/xmame/snap");
+    rompath     = iniparser_getstring(opts, "mame:rompath", "");
 
 	exit		= iniparser_getint(opts,"keys:exit", SDLK_ESCAPE);
 	snap		= iniparser_getint(opts,"keys:snap", SDLK_5);
@@ -81,5 +95,7 @@ bool Options::Unload()
 {
 	if (opts)
 		iniparser_freedict(opts);
+
+    return true;
 }
 

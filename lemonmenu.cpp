@@ -1,12 +1,23 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#ifdef WIN32
+#include <io.h>
+#include <windows.h>
+#else
 #include <unistd.h>
+#endif
 
 #include <SDL/SDL.h>
 #include <SDL/SDL_ttf.h>
 #include <SDL/SDL_image.h>
+
+#ifdef WIN32
+#include "sge\sge.h"
+#else
 #include <SDL/sge.h>
+#endif
 
 #include "table.h"
 #include "log.h"
@@ -154,6 +165,8 @@ bool LemonMenu::MenuLoop()
 	}
 	ShowCursor();
 	SelChanged();
+
+    return true;
 }
 
 void LemonMenu::UpdateSnap()
@@ -222,7 +235,11 @@ void LemonMenu::UpdateMenuSnap()
 	int maxx = 0;
 	int maxy = 0;
 
+#ifdef WIN32
+    for (i = 0; i < 4; i++)
+#else
 	for (int i = 0; i < 4; i++)
+#endif
 	{
 		if (pGameSurfaces[i]->w > maxx) maxx = pGameSurfaces[i]->w;
 		if (pGameSurfaces[i]->h > maxy) maxy = pGameSurfaces[i]->h;
@@ -287,7 +304,11 @@ void LemonMenu::UpdateMenuSnap()
 
 	SDL_BlitSurface(pGameSurfaces[3], NULL, pSnapSurface, &rc);
 
+#ifdef WIN32
+    for (i = 0; i < 4; i++)
+#else
 	for (int i = 0; i < 4; i++)
+#endif
 		SDL_FreeSurface(pGameSurfaces[i]);
 
 	if (pSnapSurface)
@@ -299,7 +320,10 @@ bool LemonMenu::RenderAll()
 	SortTable<ListItem>& tMenu = g_ptMenus[iCurMenu];
 
 	// erase the screen
-    sge_FilledRect(pBufferSurface, 0, 0, screen_x, screen_y, Uint_RGB(0, 0, 0));
+    SDL_Rect rc;
+    rc.x = 0; rc.y = 0; rc.w = screen_x; rc.h = screen_y;
+
+    SDL_FillRect(pBufferSurface, &rc, Uint_RGB(0, 0, 0));
 
     // draw the games screen shot
 	if (pSnapSurface)
@@ -329,7 +353,7 @@ bool LemonMenu::RenderAll()
 			xpos = 40;
 			ypos = 60;
 		}
-		
+
 		sge_transform(pSnapSurface, pBufferSurface, 0.0, xscale, yscale, 0, 0, xpos, ypos, SGE_TSAFE);
 		sge_FilledRectAlpha(pBufferSurface, 0, 0, screen_x, screen_y, Uint_RGB(0, 0, 0), 200);
 	}
@@ -363,9 +387,14 @@ bool LemonMenu::RenderAll()
 		SDL_BlitSurface(pTitleSurface, NULL, pBufferSurface, &rcTitle);
 
 		// draw the line under the title
-		sge_FilledRect(pBufferSurface, rcTitle.x - 10,                    pTitleSurface->h + 10,
-			                           rcTitle.x + pTitleSurface->w + 10, pTitleSurface->h + 13,
-									   Uint_RGB(0xEF, 0xEF, 0xEF));
+		SDL_Rect rc;
+        rc.x = rcTitle.x - 10;
+        rc.y = pTitleSurface->h + 10;
+        rc.w = pTitleSurface->w + 20;
+        rc.h = 3;
+									   
+
+        SDL_FillRect(pBufferSurface, &rc, Uint_RGB(0xEF, 0xEF, 0xEF));
 
 		listTop = pTitleSurface->h + 16;
 
@@ -386,7 +415,11 @@ bool LemonMenu::RenderAll()
 
 	// draw the games above the selection
     int ypos = rcSelected.y - pSelectedGame->h - 5;
+#ifdef WIN32
+    for (i = iCurItem - 1; i >= 0; i--)
+#else
 	for (int i = iCurItem - 1; i >= 0; i--)
+#endif
 	{
 		if (ypos < listTop) break;
 
@@ -403,7 +436,11 @@ bool LemonMenu::RenderAll()
 
 	// draw the games below the selection
 	ypos = rcSelected.y + pSelectedGame->h + 5;	
+#ifdef WIN32
+    for (i = iCurItem + 1; i < tMenu.GetCount(); i++)
+#else
 	for (int i = iCurItem + 1; i < tMenu.GetCount(); i++)
+#endif
 	{
 		if (ypos > screen_y) break;
 
@@ -426,6 +463,8 @@ bool LemonMenu::RenderAll()
 		g_Log.Log1("LemonMenu: double buffer blit failed\n");
 
 	SDL_UpdateRect(pScreen, 0, 0, 0, 0);
+
+    return true;
 }
 
 SDL_Surface* LemonMenu::GetNameSurface(int idx)
@@ -497,22 +536,37 @@ void LemonMenu::HandleRun()
 {
 	MameGame* pGame = (MameGame*)(g_ptMenus[iCurMenu].GetItem(iCurItem));
 
-	char cmd[1024];
 
 	const char* pszGameParam = pGame->pszParams;
 	const char* pszGlblParam = g_Options.mameparams;
 	
-	if (pszGameParam == NULL) pszGameParam = NULL;
-	if (pszGlblParam == NULL) pszGlblParam = NULL;
-
-	sprintf(cmd, "%s %s %s %s", g_Options.mamepath, pGame->pszName, pszGameParam, pszGlblParam);
-	g_Log.Log2("Running cmd [%s]\n", cmd);
+	if (pszGameParam == NULL) pszGameParam = "";
+	if (pszGlblParam == NULL) pszGlblParam = "";
 
 	int fullscreen = g_Options.fullscreen;
 	
 	if (fullscreen) SDL_WM_ToggleFullScreen(pScreen);
-	system(cmd);
+
+	char cmd[1024];
+	sprintf(cmd, "%s %s%s %s %s", g_Options.mamepath, g_Options.rompath, pGame->pszName, pszGameParam, pszGlblParam);
+
+#ifdef WIN32
+    char wincmd[1024];
+    char param[1024];
+
+    sprintf(wincmd, "%s ", g_Options.mamepath);
+    sprintf(param,  "%s%s %s %s", g_Options.rompath, pGame->pszName, pszGameParam, pszGlblParam);
+
+    ShellExecute(NULL, "open", wincmd, param, NULL, SW_SHOW);
+#else
+	g_Log.Log2("Running cmd [%s]\n", cmd);
+
+    system(cmd);
+#endif
+
 	if (fullscreen) SDL_WM_ToggleFullScreen(pScreen);
+
+    RenderAll();
 
 	// dump the event queue
 	SDL_Delay(1500);
@@ -530,9 +584,18 @@ void LemonMenu::HandleSnap()
 
 	do
 	{
+#ifdef WIN32
+        sprintf(szSnap, "snap%d", idx++);
+#else
 		sprintf(szSnap, "%s/.lemonlauncher/snap%d.bmp", getenv("HOME"), idx++);
+#endif
+
 		g_Log.Log4("HandleSnap: trying to create file %s\n", szSnap);
-	} while (access(szSnap, F_OK) == 0);
+#ifdef WIN32
+    } while (_access(szSnap, 00) == 0);
+#else
+    } while (access(szSnap, F_OK) == 0);
+#endif
 
 	g_Log.Log3("HandleSnap: Saving snap shot %s\n", szSnap);
 	SDL_SaveBMP(pScreen, szSnap);

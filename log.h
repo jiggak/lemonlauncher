@@ -7,6 +7,8 @@ public:
 	Log();
 	~Log();
 
+    void Init();
+
 	void SetLevel(int level);
 
 	int Log1(const char* format, ...);

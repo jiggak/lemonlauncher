@@ -26,6 +26,7 @@ public:
 	char* mamepath;
 	char* mameparams;
 	char* mamesnaps;
+    char* rompath;
 
 	int exit;
 	int snap;

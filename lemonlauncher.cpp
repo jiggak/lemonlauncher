@@ -14,7 +14,11 @@
 #include "misc.h"
 #include "lemonmenu.h"
 
-#define VERSION "0.0.2"
+#define VERSION "0.0.3"
+
+#ifdef WIN32
+#include <windows.h>
+#endif
 
 Options 				g_Options;
 Log						g_Log;
@@ -23,15 +27,15 @@ SortTable<ListItem>*	g_ptMenus;
 
 bool Init(SDL_Surface** ppMainScreen)
 {
-	// initialize the log file
-	g_Log.SetLevel(g_Options.loglevel);
-
 	// log version
 	g_Log.Log1("Init: Lemon Launcher version: %s\n", VERSION);
 
 	// load the options
 	bool optionsLoaded = g_Options.Load();
 	if (!optionsLoaded) g_Log.Log2("Init: options not loaded\n");
+
+	// initialize the log file
+	g_Log.SetLevel(g_Options.loglevel);
 
 	// initialize sdl
 	SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO | SDL_INIT_TIMER);
@@ -78,7 +82,13 @@ bool LoadMenuList(bool loadHidden)
 	g_tMenuItems.SetOwnsElements(true);
 
 	char szMenuFile[1024];
+
+#ifdef WIN32
+    strcpy(szMenuFile, "menulist");
+#else
 	sprintf(szMenuFile, "%s/.lemonlauncher/menulist", getenv("HOME"));
+#endif
+
 	FILE* fp = fopen(szMenuFile, "rt");
 	if (fp == NULL) { g_Log.Log1("LoadMenuList: menulist %s not found\n", szMenuFile); return false; }
 
@@ -130,7 +140,11 @@ bool LoadMenuList(bool loadHidden)
 bool LoadGameList(bool loadHidden)
 {
 	char szGameFile[1024];
-	sprintf(szGameFile, "%s/.lemonlauncher/gamelist", getenv("HOME"));
+#ifdef WIN32
+    strcpy(szGameFile, "gamelist");
+#else
+    sprintf(szGameFile, "%s/.lemonlauncher/gamelist", getenv("HOME"));
+#endif
 	FILE* fp = fopen(szGameFile, "rt");
 	if (fp == NULL) { g_Log.Log1("LoadGameList: gamelist %s not found\n", szGameFile); return false; }
 
@@ -214,7 +228,11 @@ bool BuildMenus()
 
 	g_ptMenus = new SortTable<ListItem>[menuCnt];
 
+#ifdef WIN32
+    for (i = 0; i < g_tMenuItems.GetCount(); i++)
+#else
 	for (int i = 0; i < g_tMenuItems.GetCount(); i++)
+#endif
 	{
 		switch (g_tMenuItems[i]->GetType())
 		{
@@ -235,8 +253,14 @@ bool BuildMenus()
 		}
 	}
 
+#ifdef WIN32
+    for (i = 0; i < menuCnt; i++)
+#else
 	for (int i = 0; i < menuCnt; i++)
+#endif
 		g_ptMenus[i].Sort();
+
+    return true;
 }
 
 bool Go()
@@ -268,10 +292,24 @@ bool Go()
 	return res;
 }
 
+#ifdef WIN32
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
+#else
 int main(void)
+#endif
 {
+#ifdef WIN32
+    char szFile[MAX_PATH + 1];
+    GetModuleFileName(hInstance, szFile, sizeof(szFile));
+    *strrchr(szFile, '\\') = 0;
+    SetCurrentDirectory(szFile);    
+#endif
+    g_Log.Init();
+
 	Go();
 
 	// shut down
 	bool res = UnInit();
+
+    return 0;
 }
