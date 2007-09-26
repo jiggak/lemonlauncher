@@ -1,0 +1,10 @@
+  September 26 2007
+===========================================
+This is the first working commit of the lemon launcher re-write.  It is a
+work in progress which means there is probably bugs and not all features
+are complete yet.
+
+ToDo list:
+ * use config file path in config.h (if set)
+ * update Makefile.am files to support "make install"
+ * implement screen capture feature

@@ -1,0 +1,6 @@
+#!/bin/bash
+aclocal -I m4
+test ! -d config && mkdir config
+automake --gnu --add-missing --copy
+autoheader
+autoconf

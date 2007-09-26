@@ -1,0 +1,49 @@
+AC_PREREQ(2.60)
+
+AC_INIT([Lemon Launcher], [0.0.4], [josh@slashdev.ca])
+AC_CONFIG_AUX_DIR([config])
+AC_CONFIG_MACRO_DIR([m4])
+
+AC_CONFIG_HEADER([config.h])
+#AM_CONFIG_HEADER([config.h])
+AM_INIT_AUTOMAKE
+
+# use c++ for checks
+AC_LANG_CPLUSPLUS
+
+AC_PROG_CXX
+
+AC_CXX_NAMESPACES
+AC_CXX_HAVE_STL
+
+###########################################################
+# set config file directory
+AC_ARG_WITH([confdir],
+  AC_HELP_STRING([--with-confdir=DIR], [Where to find conf files ($HOME/.lemonlauncher)]),
+  AC_DEFINE_UNQUOTED(HAVE_CONF_DIR, $withval, [Define to the directory of conf files]))
+
+###########################################################
+# check for libraries, always error if not found
+
+# check will fail unless linked against lintl on OSX only
+#AC_CHECK_LIB([confuse], [cfg_init], [LIBS="-lintl -lconfuse"],
+AC_CHECK_LIB([confuse], [cfg_init], ,
+  [AC_MSG_ERROR([Confuse library not found])])
+
+AC_CHECK_LIB([stdc++], [main], ,
+  [AC_MSG_ERROR([Stdc++ library not found])])
+
+AM_PATH_SDL([0.0.0], [LIBS="$LIBS $SDL_LIBS"],
+  [AC_MSG_ERROR([SDL library not found])])
+
+AC_CHECK_LIB([SDL_image], [main], ,
+  [AC_MSG_ERROR([SDL_image library not found])])
+
+AC_CHECK_LIB([SDL_gfx], [main], ,
+  [AC_MSG_ERROR([SDL_gfx library not found])])
+
+AC_CHECK_LIB([SDL_ttf], [main], ,
+  [AC_MSG_ERROR([SDL_ttf library not found])])
+
+AC_CONFIG_FILES([Makefile src/Makefile])
+AC_OUTPUT
