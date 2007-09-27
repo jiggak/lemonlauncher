@@ -33,16 +33,24 @@ namespace ll {
 #define KEY_SCREEN_HEIGHT "height"    /* height of video mode (int) */
 #define KEY_SCREEN_BPP    "bitdepth"  /* pits per pixel */
 #define KEY_FULLSCREEN    "fullscreen"
-#define KEY_FONT_FILE     "font"
-#define KEY_TITLE_HEIGHT  "title_height"
-#define KEY_LIST_HEIGHT   "list_height"
-#define KEY_PAGE_SIZE     "pagesize"
+
+/* Ui settings */
+#define KEY_FONT_FILE      "font"
+#define KEY_TITLE_HEIGHT   "title_height"
+#define KEY_TITLE_COLOR    "title_color"
+#define KEY_LIST_HEIGHT    "list_height"
+#define KEY_MENU_COLOR     "menu_color"
+#define KEY_MENU_HOVER_COLOR "menu_hover_color"
+#define KEY_GAME_COLOR     "game_color"
+#define KEY_GAME_HOVER_COLOR "game_hover_color"
+#define KEY_SNAPSHOT_ALPHA "snapshot_alpha"
+#define KEY_SNAPSHOT_DELAY "snapshot_delay"
+#define KEY_PAGE_SIZE      "page_size"
 
 /* MAME settings */
 #define KEY_MAME_PATH       "path"
 #define KEY_MAME_PARAMS     "params"
 #define KEY_MAME_SNAPS_PATH "snaps"
-#define KEY_MAME_ROM_PATH   "rompath"
 
 /* Key mapping */
 #define KEY_KEYCODE_EXIT      "exit"

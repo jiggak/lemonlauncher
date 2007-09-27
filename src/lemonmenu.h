@@ -208,6 +208,13 @@ private:
    menu* _current;
    
    const int _page_size;
+   const int _title_color;
+   const int _menu_color;
+   const int _menu_hover_color;
+   const int _game_color;
+   const int _game_hover_color;
+   const int _snap_alpha;
+   const int _snap_delay;
 
    void load_menus();
 

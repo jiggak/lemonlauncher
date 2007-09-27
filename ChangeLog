@@ -1,5 +1,9 @@
  Sept 26/2007
 =======================
++ added options for customizing font colors, snapshot delay,
+  and snapshot alpha blending
++ removed unused rompath option since this can be set via
+  the mame params option
 + added check for config directory override in config.h
 + moved exception class to it's own header file
 

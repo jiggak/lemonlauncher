@@ -27,7 +27,7 @@
 
 #define UPDATE_SNAP_EVENT 1
 #define RGB(r,g,b) (((Uint32)b << 16) | ((Uint32)g << 8) | ((Uint32)r))
-#define RGBA(r,g,b,a) (((Uint32)a << 32) | ((Uint32)b << 16) | ((Uint32)g << 8) | ((Uint32)r))
+#define RGB_SDL(rgb) SDL_RGB((rgb&0xff0000) >> 16, (rgb&0xff00) >> 8, rgb&0xff)
 #define SDL_RGB(r,g,b) ((SDL_Color){r, g, b})
 
 using namespace ll;
@@ -39,11 +39,18 @@ using namespace std;
 Uint32 snap_timer_callback(Uint32 interval, void *param);
 
 lemon_menu::lemon_menu(SDL_Surface* screen, options* opts) :
-   _screen(screen), _opts(opts), _page_size(_opts->get_int(KEY_PAGE_SIZE)),
-   _show_hidden(false), _snap(NULL), _snap_timer(0)
+   _screen(screen), _opts(opts), _show_hidden(false), _snap(NULL), _snap_timer(0),
+   _page_size(_opts->get_int(KEY_PAGE_SIZE)),
+   _title_color(_opts->get_int(KEY_TITLE_COLOR)),
+   _menu_color(_opts->get_int(KEY_MENU_COLOR)),
+   _menu_hover_color(_opts->get_int(KEY_MENU_HOVER_COLOR)),
+   _game_color(_opts->get_int(KEY_GAME_COLOR)),
+   _game_hover_color(_opts->get_int(KEY_GAME_HOVER_COLOR)),
+   _snap_alpha(_opts->get_int(KEY_SNAPSHOT_ALPHA)),
+   _snap_delay(_opts->get_int(KEY_SNAPSHOT_DELAY))
 {
    load_menus();
-
+   
    const char* font_path = _opts->get_string(KEY_FONT_FILE);
    int title_height = _opts->get_int(KEY_TITLE_HEIGHT);
    int list_height = _opts->get_int(KEY_LIST_HEIGHT);
@@ -113,9 +120,18 @@ void lemon_menu::load_menus()
       CFG_END()
    };
    
+   string path(_opts->conf_dir());
+   path.append("/games.conf");
+   
    cfg_t* cfg = cfg_init(root_opts, CFGF_NONE);
-   if (cfg_parse(cfg, "games.conf") != CFG_SUCCESS)
-      throw bad_lemon("load_menus: file parse error");
+   int result = cfg_parse(cfg, path.c_str());
+   
+   if (result == CFG_FILE_ERROR) {
+      perror(path.c_str());
+      throw bad_lemon("load_menus: file error");
+   } else if (result == CFG_PARSE_ERROR) {
+      throw bad_lemon("load_menus: parse error");
+   }
 
    // only one root supported for now, should be straight forward to support more
    //cfg_t* root = cfg_getsec(cfg, "root");
@@ -198,16 +214,15 @@ void lemon_menu::render()
       
       // fill scaled surface with black and do alpha blit
       SDL_FillRect(scaled, NULL, RGB(0,0,0));
-      SDL_SetAlpha(scaled, SDL_SRCALPHA, 200);
+      SDL_SetAlpha(scaled, SDL_SRCALPHA, _snap_alpha);
       SDL_BlitSurface(scaled, NULL, _buffer, &snap_rect);
       
       // free scaled surface
       SDL_FreeSurface(scaled);
    }
 
-   SDL_Color title_color = {0xEF, 0xEF, 0xEF};
    SDL_Surface* title =
-      TTF_RenderText_Blended(_title_font, _current->text(), title_color);
+      TTF_RenderText_Blended(_title_font, _current->text(), RGB_SDL(_title_color));
    SDL_Rect title_rect =
       { (_screen->w / 2) - (title->w / 2), 8, title->w, title->h };
 
@@ -218,7 +233,7 @@ void lemon_menu::render()
       { title_rect.x - 10, title_rect.h + 10, title_rect.w + 10, 3};
    
    // draw line under the title
-   SDL_FillRect(_buffer, &underline, RGB(0xEF, 0xEF, 0xEF));
+   SDL_FillRect(_buffer, &underline, _title_color);
 
    // finished with the title surface
    SDL_FreeSurface(title);
@@ -241,8 +256,8 @@ void lemon_menu::render()
    SDL_FreeSurface(item_surface);
 
    // set absolute top/bottom of list area
-   int top = title_rect.y + title_rect.h + 16;
-   int bottom = _screen->h;
+   int top = title_rect.y + title_rect.h + 8;
+   int bottom = _screen->h - 8;
    
    int yoff_above = item_rect.y - item_rect.h - 5;
    int yoff_bellow = item_rect.y + item_rect.h + 5;
@@ -420,7 +435,6 @@ void lemon_menu::handle_run()
 
    bool full = _opts->get_bool(KEY_FULLSCREEN);
    const char* mame_path = _opts->get_string(KEY_MAME_PATH);
-   const char* rom_path = _opts->get_string(KEY_MAME_ROM_PATH);
    const char* mame_params = _opts->get_string(KEY_MAME_PARAMS);
 	
    log << info << "handle_run: launching game " << g->text() << endl;
@@ -428,7 +442,7 @@ void lemon_menu::handle_run()
 	if (full) SDL_WM_ToggleFullScreen(_screen);
 
    stringstream cmd;
-   cmd << mame_path << ' ' << rom_path << g->rom() << ' ' << g->params() << ' ' << mame_params;
+   cmd << mame_path << ' ' << mame_params << ' ' << g->rom() << ' ' << g->params();
 
    log << debug << "handle_run: " << cmd.str() << endl;
 
@@ -518,7 +532,7 @@ void lemon_menu::reset_snap_timer()
    }
 
    // schedule timer to run in 500 milliseconds
-   _snap_timer = SDL_AddTimer(500, snap_timer_callback, NULL);
+   _snap_timer = SDL_AddTimer(_snap_delay, snap_timer_callback, NULL);
 }
 
 SDL_Surface* menu::draw(TTF_Font* font) const
