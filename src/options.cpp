@@ -18,7 +18,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #include "options.h"
+#include "error.h"
 
+#include <stdio.h>
 #include <string>
 #include <exception>
 #include <iostream>
@@ -26,7 +28,7 @@
 using namespace ll;
 using namespace std;
 
-options::options(const char* path)
+options::options(const char* conf_dir) : _conf_dir(conf_dir)
 {
    /*
    cfg_opt_t screen_opts[] = {
@@ -114,9 +116,18 @@ options::options(const char* path)
       CFG_END()
    };
    
+   string path(_conf_dir);
+   path.append("/lemonlauncher.conf");
+   
    _cfg = cfg_init(opts, CFGF_NONE);
-   if (cfg_parse(_cfg, path) != CFG_SUCCESS)
-      throw exception();
+   int ret = cfg_parse(_cfg, path.c_str());
+   
+   if (ret == CFG_FILE_ERROR) {
+      perror(path.c_str());
+      throw bad_lemon("file error");
+   } else if (ret == CFG_PARSE_ERROR) {
+      throw bad_lemon("parse error");
+   }
 }
 
 options::~options()

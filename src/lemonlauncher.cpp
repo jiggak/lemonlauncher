@@ -21,16 +21,27 @@
 #include <SDL/SDL_ttf.h>
 
 #include <config.h>
+#include <string>
+#include <stdlib.h>
 
+#include "error.h"
 #include "options.h"
 #include "log.h"
 #include "lemonmenu.h"
 
 using namespace ll;
+using namespace std;
 
 int main(int argc, char** argv)
 {
-   options* opts = new options("lemonlauncher.conf");
+#ifdef HAVE_CONF_DIR
+   string dir(HAVE_CONF_DIR);
+#else
+   string dir(getenv("HOME"));
+   dir.append("/.lemonlauncher");
+#endif
+   
+   options* opts = new options(dir.c_str());
    
    int level = opts->get_int(KEY_LOGLEVEL);
    log.level((log_level)level);
@@ -54,18 +65,25 @@ int main(int argc, char** argv)
    screen = SDL_SetVideoMode(xres, yres, bits, SDL_SWSURFACE | (full ? SDL_FULLSCREEN : 0));
    if (!screen) {
       log << error << "main: unable to open screen" << endl;
-      return 0;
+      return 1;
    }
 
    // init the font engine
    if (TTF_Init()) {
       log << error << "main: unable to start font engine" << endl;
-      return 0;
+      SDL_Quit();
+      return 1;
    }
    
-   lemon_menu* menu = new lemon_menu(screen, opts);
-   menu->main_loop();
-   delete menu;
+   lemon_menu* menu = NULL;
+   try {
+      menu = new lemon_menu(screen, opts);
+      menu->main_loop();
+   } catch (bad_lemon& e) {
+      // error was already logged in bad_lemon constructor
+   }
+   
+   if (menu) delete menu;
    
    // shutdown fonts
    TTF_Quit();

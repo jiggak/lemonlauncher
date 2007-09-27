@@ -33,21 +33,6 @@ using namespace std;
 namespace ll {
 
 /**
- * Our own exception for errors that occur in the system
- */
-class bad_lemon : public exception {
-private:
-  const char* _msg;
-
-public:
-  bad_lemon(const char* msg) : _msg(msg)
-  { log << error << msg << endl; }
-  
-  virtual const char* what() const throw()
-  { return _msg; }
-};
-
-/**
  * Base class for all drawable items (game, menu, etc)
  */
 class item {

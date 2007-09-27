@@ -1,3 +1,8 @@
+ Sept 26/2007
+=======================
++ added check for config directory override in config.h
++ moved exception class to it's own header file
+
 0.0.3
 -------------------
 

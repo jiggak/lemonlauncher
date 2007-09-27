@@ -69,19 +69,26 @@ namespace ll {
 class options
 {
 private:
+   const char* _conf_dir;
    cfg_t *_cfg;
    
 public:
    /**
-    * Creates options instance by parsing config file at the given path
-    * @param path fully qualified path to config file
+    * Creates options instance by parsing conf files in the conf file directory
+    * @param conf_dir conf file directory
     */
-   options(const char* path);
+   options(const char* conf_dir);
    
    /**
     * Cleanup
     */
    ~options();
+   
+   /**
+    * Returns conf file directory set by constructor
+    */
+   const char* conf_dir() const
+   { return _conf_dir; }
    
    /**
     * 

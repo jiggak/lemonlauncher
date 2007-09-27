@@ -18,6 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #include "lemonmenu.h"
+#include "error.h"
 
 #include <SDL/SDL_image.h>
 #include <SDL/SDL_rotozoom.h>
