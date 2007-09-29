@@ -41,9 +41,9 @@ int main(int argc, char** argv)
    dir.append("/.lemonlauncher");
 #endif
    
-   options* opts = new options(dir.c_str());
+   g_opts.load(dir.c_str());
    
-   int level = opts->get_int(KEY_LOGLEVEL);
+   int level = g_opts.get_int(KEY_LOGLEVEL);
    log.level((log_level)level);
    log << info << "main: setting log level " << level << endl;
    
@@ -55,10 +55,10 @@ int main(int argc, char** argv)
    // create a screen to draw on
    SDL_Surface* screen;
    
-   int xres = opts->get_int(KEY_SCREEN_WIDTH);
-   int yres = opts->get_int(KEY_SCREEN_HEIGHT);
-   int bits = opts->get_int(KEY_SCREEN_BPP);
-   bool full = opts->get_bool(KEY_FULLSCREEN);
+   int xres = g_opts.get_int(KEY_SCREEN_WIDTH);
+   int yres = g_opts.get_int(KEY_SCREEN_HEIGHT);
+   int bits = g_opts.get_int(KEY_SCREEN_BPP);
+   bool full = g_opts.get_bool(KEY_FULLSCREEN);
    
    log << info << "main: using graphics mode: " << xres <<'x'<< yres <<'x'<< bits << endl;
    
@@ -77,7 +77,7 @@ int main(int argc, char** argv)
    
    lemon_menu* menu = NULL;
    try {
-      menu = new lemon_menu(screen, opts);
+      menu = new lemon_menu(screen);
       menu->main_loop();
    } catch (bad_lemon& e) {
       // error was already logged in bad_lemon constructor

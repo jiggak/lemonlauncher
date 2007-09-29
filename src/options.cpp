@@ -22,14 +22,19 @@
 
 #include <stdio.h>
 #include <string>
-#include <exception>
 #include <iostream>
+
+namespace ll { options g_opts; }
 
 using namespace ll;
 using namespace std;
 
-options::options(const char* conf_dir) : _conf_dir(conf_dir)
+options::options() : _cfg(NULL) { }
+
+void options::load(const char* conf_dir)
 {
+   _conf_dir = (char*)conf_dir;
+   
    cfg_opt_t opts[] = {
       CFG_INT(KEY_LOGLEVEL, 2, CFGF_NONE),
       

@@ -81,15 +81,16 @@ private:
    string _name; // menu name
    vector<item*> _children; // array of children
    int _selected; // index of selected child
+   SDL_Color _color;
+   SDL_Color _hover;
 
 public:
-   menu(const char* name) : _name(name), _selected(0) { }
+   menu(const char* name);
    
    virtual ~menu()
    {
-      for (vector<item*>::iterator i = _children.begin(); i != _children.end(); i++) {
+      for (vector<item*>::iterator i = _children.begin(); i != _children.end(); i++)
          delete *i;
-      }
    }
 
    /**
@@ -167,10 +168,11 @@ private:
    string _rom;    // rom name
    string _name;   // game name
    string _params; // game specific mame parameters
+   SDL_Color _color;
+   SDL_Color _hover;
 
 public:
-   game(const char* rom, const char* name, const char* params) :
-      _rom(rom), _name(name), _params(params) { }
+   game(const char* rom, const char* name, const char* params);
 
    virtual ~game() { }
    
@@ -191,8 +193,6 @@ public:
 
 class lemon_menu {
 private:
-   options* _opts;
-
    SDL_Surface* _screen;
    SDL_Surface* _buffer;
    SDL_Surface* _snap;
@@ -237,7 +237,7 @@ private:
    void handle_show_hide();
    
 public:
-   lemon_menu(SDL_Surface* screen, options* opts);
+   lemon_menu(SDL_Surface* screen);
    
    ~lemon_menu();
 

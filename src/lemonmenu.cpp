@@ -18,6 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #include "lemonmenu.h"
+#include "options.h"
 #include "error.h"
 
 #include <SDL/SDL_image.h>
@@ -27,8 +28,8 @@
 
 #define UPDATE_SNAP_EVENT 1
 #define RGB(r,g,b) (((Uint32)b << 16) | ((Uint32)g << 8) | ((Uint32)r))
-#define RGB_SDL(rgb) SDL_RGB((rgb&0xff0000) >> 16, (rgb&0xff00) >> 8, rgb&0xff)
 #define SDL_RGB(r,g,b) ((SDL_Color){r, g, b})
+#define RGB_SDL_Color(rgb) SDL_RGB((rgb&0xff0000) >> 16, (rgb&0xff00) >> 8, rgb&0xff)
 
 using namespace ll;
 using namespace std;
@@ -38,22 +39,22 @@ using namespace std;
  */
 Uint32 snap_timer_callback(Uint32 interval, void *param);
 
-lemon_menu::lemon_menu(SDL_Surface* screen, options* opts) :
-   _screen(screen), _opts(opts), _show_hidden(false), _snap(NULL), _snap_timer(0),
-   _page_size(_opts->get_int(KEY_PAGE_SIZE)),
-   _title_color(_opts->get_int(KEY_TITLE_COLOR)),
-   _menu_color(_opts->get_int(KEY_MENU_COLOR)),
-   _menu_hover_color(_opts->get_int(KEY_MENU_HOVER_COLOR)),
-   _game_color(_opts->get_int(KEY_GAME_COLOR)),
-   _game_hover_color(_opts->get_int(KEY_GAME_HOVER_COLOR)),
-   _snap_alpha(_opts->get_int(KEY_SNAPSHOT_ALPHA)),
-   _snap_delay(_opts->get_int(KEY_SNAPSHOT_DELAY))
+lemon_menu::lemon_menu(SDL_Surface* screen) :
+   _screen(screen), _show_hidden(false), _snap(NULL), _snap_timer(0),
+   _page_size(g_opts.get_int(KEY_PAGE_SIZE)),
+   _title_color(g_opts.get_int(KEY_TITLE_COLOR)),
+   _menu_color(g_opts.get_int(KEY_MENU_COLOR)),
+   _menu_hover_color(g_opts.get_int(KEY_MENU_HOVER_COLOR)),
+   _game_color(g_opts.get_int(KEY_GAME_COLOR)),
+   _game_hover_color(g_opts.get_int(KEY_GAME_HOVER_COLOR)),
+   _snap_alpha(g_opts.get_int(KEY_SNAPSHOT_ALPHA)),
+   _snap_delay(g_opts.get_int(KEY_SNAPSHOT_DELAY))
 {
    load_menus();
    
-   const char* font_path = _opts->get_string(KEY_FONT_FILE);
-   int title_height = _opts->get_int(KEY_TITLE_HEIGHT);
-   int list_height = _opts->get_int(KEY_LIST_HEIGHT);
+   const char* font_path = g_opts.get_string(KEY_FONT_FILE);
+   int title_height = g_opts.get_int(KEY_TITLE_HEIGHT);
+   int list_height = g_opts.get_int(KEY_LIST_HEIGHT);
    
    log << debug << "lemon_menu: using font file " << font_path << endl;
    
@@ -115,12 +116,12 @@ void lemon_menu::load_menus()
       CFG_END()
    };
    
-   cfg_opt_t opts[] = {
-      CFG_SEC("root", root_opts, CFGF_TITLE),
-      CFG_END()
-   };
+   //cfg_opt_t opts[] = {
+   //   CFG_SEC("root", root_opts, CFGF_TITLE),
+   //   CFG_END()
+   //};
    
-   string path(_opts->conf_dir());
+   string path(g_opts.conf_dir());
    path.append("/games.conf");
    
    cfg_t* cfg = cfg_init(root_opts, CFGF_NONE);
@@ -222,7 +223,7 @@ void lemon_menu::render()
    }
 
    SDL_Surface* title =
-      TTF_RenderText_Blended(_title_font, _current->text(), RGB_SDL(_title_color));
+      TTF_RenderText_Blended(_title_font, _current->text(), RGB_SDL_Color(_title_color));
    SDL_Rect title_rect =
       { (_screen->w / 2) - (title->w / 2), 8, title->w, title->h };
 
@@ -314,22 +315,22 @@ void lemon_menu::main_loop()
    render();
    reset_snap_timer();
 
-   const int p1up_key = _opts->get_int(KEY_KEYCODE_P1_UP);
-   const int p1down_key = _opts->get_int(KEY_KEYCODE_P1_DOWN);
-   const int p1pgup_key = _opts->get_int(KEY_KEYCODE_P1_PGUP);
-   const int p1pgdown_key = _opts->get_int(KEY_KEYCODE_P1_PGDOWN);
-   const int p2up_key = _opts->get_int(KEY_KEYCODE_P2_UP);
-   const int p2down_key = _opts->get_int(KEY_KEYCODE_P2_DOWN);
-   const int p2pgup_key = _opts->get_int(KEY_KEYCODE_P2_PGUP);
-   const int p2pgdown_key = _opts->get_int(KEY_KEYCODE_P2_PGDOWN);
-   const int exit_key = _opts->get_int(KEY_KEYCODE_EXIT);
-   const int p1b1_key = _opts->get_int(KEY_KEYCODE_P1_BTN1);
-   const int p1b2_key = _opts->get_int(KEY_KEYCODE_P1_BTN2);
-   const int p2b1_key = _opts->get_int(KEY_KEYCODE_P2_BTN1);
-   const int p2b2_key = _opts->get_int(KEY_KEYCODE_P2_BTN2);
-   const int snap_key = _opts->get_int(KEY_KEYCODE_SNAP);
-   const int reload_key = _opts->get_int(KEY_KEYCODE_RELOAD);
-   const int toggle_key = _opts->get_int(KEY_KEYCODE_TOGGLE);
+   const int p1up_key = g_opts.get_int(KEY_KEYCODE_P1_UP);
+   const int p1down_key = g_opts.get_int(KEY_KEYCODE_P1_DOWN);
+   const int p1pgup_key = g_opts.get_int(KEY_KEYCODE_P1_PGUP);
+   const int p1pgdown_key = g_opts.get_int(KEY_KEYCODE_P1_PGDOWN);
+   const int p2up_key = g_opts.get_int(KEY_KEYCODE_P2_UP);
+   const int p2down_key = g_opts.get_int(KEY_KEYCODE_P2_DOWN);
+   const int p2pgup_key = g_opts.get_int(KEY_KEYCODE_P2_PGUP);
+   const int p2pgdown_key = g_opts.get_int(KEY_KEYCODE_P2_PGDOWN);
+   const int exit_key = g_opts.get_int(KEY_KEYCODE_EXIT);
+   const int p1b1_key = g_opts.get_int(KEY_KEYCODE_P1_BTN1);
+   const int p1b2_key = g_opts.get_int(KEY_KEYCODE_P1_BTN2);
+   const int p2b1_key = g_opts.get_int(KEY_KEYCODE_P2_BTN1);
+   const int p2b2_key = g_opts.get_int(KEY_KEYCODE_P2_BTN2);
+   const int snap_key = g_opts.get_int(KEY_KEYCODE_SNAP);
+   const int reload_key = g_opts.get_int(KEY_KEYCODE_RELOAD);
+   const int toggle_key = g_opts.get_int(KEY_KEYCODE_TOGGLE);
 
    _running = true;
    while (_running) {
@@ -433,9 +434,9 @@ void lemon_menu::handle_run()
 {
    game* g = (game*)_current->selected();
 
-   bool full = _opts->get_bool(KEY_FULLSCREEN);
-   const char* mame_path = _opts->get_string(KEY_MAME_PATH);
-   const char* mame_params = _opts->get_string(KEY_MAME_PARAMS);
+   bool full = g_opts.get_bool(KEY_FULLSCREEN);
+   const char* mame_path = g_opts.get_string(KEY_MAME_PATH);
+   const char* mame_params = g_opts.get_string(KEY_MAME_PARAMS);
 	
    log << info << "handle_run: launching game " << g->text() << endl;
    
@@ -508,7 +509,7 @@ void lemon_menu::get_game_snap()
    game* g = (game*)_current->selected();
 
    stringstream img;
-   img << _opts->get_string(KEY_MAME_SNAPS_PATH) << '/' << g->rom() << "/0000.png";
+   img << g_opts.get_string(KEY_MAME_SNAPS_PATH) << '/' << g->rom() << "/0000.png";
    
    log << debug << "get_game_snap: " << img.str() << endl;
 
@@ -535,17 +536,28 @@ void lemon_menu::reset_snap_timer()
    _snap_timer = SDL_AddTimer(_snap_delay, snap_timer_callback, NULL);
 }
 
+menu::menu(const char* name) : _name(name), _selected(0)
+{
+   _color = RGB_SDL_Color(g_opts.get_int(KEY_MENU_COLOR));
+   _hover = RGB_SDL_Color(g_opts.get_int(KEY_MENU_HOVER_COLOR));
+}
+
 SDL_Surface* menu::draw(TTF_Font* font) const
 {
-   SDL_Color c = parent() && this == ((menu*)parent())->selected()?
-         SDL_RGB(0x32, 0xE4, 0xFF) : SDL_RGB(0xC2, 0xF4, 0xFF);
+   SDL_Color c = parent() && this == ((menu*)parent())->selected()? _hover : _color;
    return TTF_RenderText_Blended(font, text(), c);
+}
+
+game::game(const char* rom, const char* name, const char* params) :
+   _rom(rom), _name(name), _params(params)
+{
+   _color = RGB_SDL_Color(g_opts.get_int(KEY_GAME_COLOR));
+   _hover = RGB_SDL_Color(g_opts.get_int(KEY_GAME_HOVER_COLOR));
 }
 
 SDL_Surface* game::draw(TTF_Font* font) const
 {
-   SDL_Color c = this == ((menu*)parent())->selected()?
-         SDL_RGB(0xFF, 0xE4, 0x32) : SDL_RGB(0xEF, 0xEF, 0xEF);
+   SDL_Color c = this == ((menu*)parent())->selected()? _hover : _color;
    return TTF_RenderText_Blended(font, text(), c);
 }
 

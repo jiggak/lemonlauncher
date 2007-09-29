@@ -19,8 +19,4 @@
  */
 #include "log.h"
 
-namespace ll {
-   
-logger log;
-
-}
+namespace ll { logger log; }

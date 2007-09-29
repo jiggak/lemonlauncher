@@ -20,7 +20,6 @@
 #ifndef OPTIONS_H_
 #define OPTIONS_H_
 
-#include <string>
 #include <confuse.h>
 
 namespace ll {
@@ -77,24 +76,23 @@ namespace ll {
 class options
 {
 private:
-   const char* _conf_dir;
+   char* _conf_dir;
    cfg_t *_cfg;
    
 public:
    /**
-    * Creates options instance by parsing conf files in the conf file directory
-    * @param conf_dir conf file directory
+    * Creates options class.  The load method must be called before calling
+    * any of the get_ methods.
     */
-   options(const char* conf_dir);
+   options();
    
-   /**
-    * Cleanup
-    */
+   /** Cleanup */
    ~options();
    
-   /**
-    * Returns conf file directory set by constructor
-    */
+   /** Parses conf conf files from the conf file directory */
+   void load(const char* conf_dir);
+   
+   /** Returns conf file directory set by load method */
    const char* conf_dir() const
    { return _conf_dir; }
    
@@ -113,6 +111,8 @@ public:
     */
    const char* get_string(const char* key) const;
 };
+
+extern options g_opts;
 
 } // end namespace declaration 
 
