@@ -53,7 +53,6 @@ namespace ll {
 
 /* Key mapping */
 #define KEY_KEYCODE_EXIT      "exit"
-#define KEY_KEYCODE_SNAP      "snap"
 #define KEY_KEYCODE_RELOAD    "reload"
 #define KEY_KEYCODE_TOGGLE    "showhide"
 #define KEY_KEYCODE_P1_UP     "p1up"

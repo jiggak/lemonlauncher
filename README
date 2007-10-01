@@ -1,5 +1,7 @@
-Lemon Launcher is a simple mame front-end intended for use inside
-an arcade machine.
+Lemon Launcher is a simple mame front-end intended for use inside an arcade
+machine.  Game selection is meant to be as easy as possible using only a
+joystick and buttons.
+
 
 Requirements
 ============
@@ -14,3 +16,38 @@ I've tested Linux, Mac OS X, and Windows.  These are the dependancies:
 * libConfuse
 
 
+Installation
+============
+
+Install the dependancies.  Extract the tar.gz file and run:
+./configure --prefix=/usr
+make
+sudo make install
+
+By default lemon launcher will search for configuration files in your home
+directory (~/.lemonlauncher/).  Sample configuration files can be found here:
+/usr/share/lemonlauncher/lemonlauncher.conf
+/usr/share/lemonlauncher/games.conf
+
+You can override the default configuration file search path by passing a static
+directory path to the configure script (--with-confdir).
+
+
+Customizing
+===========
+
+Lemon launcher uses a set of default options which work well in most cases.
+However, lemon launcher is extensively customizable.  Copy the example
+lemonlauncher.conf file (/usr/share/lemonlauncher/lemonlauncher.conf) to your
+config directory (~/.lemonlauncher/lemonlauncher.conf) and edit with your
+favorite text editor.
+
+Default key mapping is based on the factory keycodes on the ultimarc ipac and
+jpac.  See the key mapping section of lemonlauncher.conf for a list of keys and
+their function.  Note this file uses raw SDL key codes.  For a comprehensive
+list of key names and their codes see:
+/usr/share/lemonlauncher/keycodes.txt
+
+Default font in lemon launcher is Bitstream Vera Sans Bold.  You can override
+this default at compile time using the --with-default-font switch to the
+configure script.  You can also set the current font in the lemonlauncher.conf.

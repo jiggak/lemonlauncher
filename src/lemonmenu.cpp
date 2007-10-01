@@ -349,7 +349,6 @@ void lemon_menu::main_loop()
    const int p1b2_key = g_opts.get_int(KEY_KEYCODE_P1_BTN2);
    const int p2b1_key = g_opts.get_int(KEY_KEYCODE_P2_BTN1);
    const int p2b2_key = g_opts.get_int(KEY_KEYCODE_P2_BTN2);
-   const int snap_key = g_opts.get_int(KEY_KEYCODE_SNAP);
    const int reload_key = g_opts.get_int(KEY_KEYCODE_RELOAD);
    const int toggle_key = g_opts.get_int(KEY_KEYCODE_TOGGLE);
 
@@ -379,8 +378,6 @@ void lemon_menu::main_loop()
 	            handle_activate();
 	         else if (key == p1b2_key || key == p2b2_key)
 	            handle_up_menu();
-	         else if (key == snap_key) 
-	            handle_snap();
 	         else if (key == reload_key)
 	         {
 	            load_menus();
@@ -435,10 +432,6 @@ void lemon_menu::handle_pgdown()
       reset_snap_timer();
       render();
    }
-}
-
-void lemon_menu::handle_snap()
-{
 }
 
 void lemon_menu::handle_activate()

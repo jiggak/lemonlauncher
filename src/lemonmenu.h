@@ -237,7 +237,6 @@ private:
    void handle_pgup();
    void handle_pgdown();
    void handle_run();
-   void handle_snap();
    void handle_up_menu();
    void handle_down_menu();
    void handle_activate();
