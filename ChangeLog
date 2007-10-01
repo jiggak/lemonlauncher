@@ -1,3 +1,10 @@
+ Oct  01/2007
+=======================
++ made option files completely optional
++ added build parameter to set default font
++ added build step to convert default font into static resource
++ moved snapshot finding logic to the game and menu classes
+
  Sept 26/2007
 =======================
 + added options for customizing font colors, snapshot delay,
