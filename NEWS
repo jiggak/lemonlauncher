@@ -1,3 +1,45 @@
+  October 1 2007
+===========================================
+The configuration file and the games list are completely optional now.
+They are still required in order for the program to be useful but it's
+no longer an error if they are missing.  An empty games list is used
+if games.conf is not found and default options are used if
+lemonlauncher.conf is not found.
+
+If default options are used, the launcher will load font from the
+default font set at compile time set by the configure script.  This
+font file can be customized by setting the with-default-font switch.
+Due to the license of the slicker.ttf font (the original font used
+in lemon launcher) this file can not be packaged with the source.
+Instead, VeraBd.tff is bundled as the default font.
+
+Running "make install" should behave correctly now.  The list of files
+installed are:
+$PREFIX/bin/lemonlauncher
+$PREFIX/share/lemonlauncher/lemonlauncher.conf
+$PREFIX/share/lemonlauncher/games.conf
+
+The two conf files are included as examples so the user can copy/modify
+them to customize lemon launcher.  By default lemon launcher will look
+for these files in $HOME/.lemonlauncher but this can be modified with
+the --with-confdir switch at compile time.
+
+The only item in the ToDo list that was no implemented was screen captures.
+This feature would take a screen capture of lemonlauncher so I don't really
+see the point since there is not really much to see in the launcher.  One
+could just as easily use the screen capture feature of their window manager.
+
+So this should conclude the work for this release.  In the next release
+I would like to add some new features:
+
+ToDo list:
+ * simple layout/skin system for re-arranging elements on the screen
+ * some sort of games list generating tool which converts list the
+   rom manifest created by mame into the list format of the launcher
+ * the menu system needs work.  it should be extended to support multiple
+   top level menus and recognize if only one level exists in which case
+   a single long list of games should be used.
+
   September 26 2007
 ===========================================
 This is the first working commit of the lemon launcher re-write.  It is a

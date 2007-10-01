@@ -20,11 +20,14 @@
 #include "lemonmenu.h"
 #include "options.h"
 #include "error.h"
+#include "default_font.h"
 
+#include <SDL/SDL_rwops.h>
 #include <SDL/SDL_image.h>
 #include <SDL/SDL_rotozoom.h>
 #include <confuse.h>
 #include <sstream>
+#include <fstream>
 
 #define UPDATE_SNAP_EVENT 1
 #define RGB(r,g,b) (((Uint32)b << 16) | ((Uint32)g << 8) | ((Uint32)r))
@@ -43,10 +46,6 @@ lemon_menu::lemon_menu(SDL_Surface* screen) :
    _screen(screen), _show_hidden(false), _snap(NULL), _snap_timer(0),
    _page_size(g_opts.get_int(KEY_PAGE_SIZE)),
    _title_color(g_opts.get_int(KEY_TITLE_COLOR)),
-   _menu_color(g_opts.get_int(KEY_MENU_COLOR)),
-   _menu_hover_color(g_opts.get_int(KEY_MENU_HOVER_COLOR)),
-   _game_color(g_opts.get_int(KEY_GAME_COLOR)),
-   _game_hover_color(g_opts.get_int(KEY_GAME_HOVER_COLOR)),
    _snap_alpha(g_opts.get_int(KEY_SNAPSHOT_ALPHA)),
    _snap_delay(g_opts.get_int(KEY_SNAPSHOT_DELAY))
 {
@@ -56,18 +55,34 @@ lemon_menu::lemon_menu(SDL_Surface* screen) :
    int title_height = g_opts.get_int(KEY_TITLE_HEIGHT);
    int list_height = g_opts.get_int(KEY_LIST_HEIGHT);
    
-   log << debug << "lemon_menu: using font file " << font_path << endl;
-   
-   _title_font = TTF_OpenFont(font_path, title_height);
-   if (!_title_font) {
-      log << error << TTF_GetError() << endl;
-      throw bad_lemon("lemon_menu: unable to create title font");
-   }
-   
-   _list_font  = TTF_OpenFont(font_path, list_height);
-   if (!_list_font) {
-      log << error << TTF_GetError() << endl;
-      throw bad_lemon("lemon_menu: unable to create list font");
+   // try and open the font file
+   fstream f(font_path, ios::in);
+   if (f.is_open()) {
+      f.close();
+      
+      log << debug << "lemon_menu: using font file " << font_path << endl;
+      
+      _title_font = TTF_OpenFont(font_path, title_height);
+      if (!_title_font) {
+         log << error << TTF_GetError() << endl;
+         throw bad_lemon("lemon_menu: unable to create title font");
+      }
+      
+      _list_font  = TTF_OpenFont(font_path, list_height);
+      if (!_list_font) {
+         log << error << TTF_GetError() << endl;
+         throw bad_lemon("lemon_menu: unable to create list font");
+      }
+   } else {
+      log << warn << "lemon_menu: font missing, using default" << endl;
+      
+      SDL_RWops* rw;
+      
+      rw = SDL_RWFromMem((void*)default_font, default_font_size);
+      _title_font = TTF_OpenFontRW(rw, 0, title_height);
+      
+      rw = SDL_RWFromMem((void*)default_font, default_font_size);
+      _list_font = TTF_OpenFontRW(rw, 0, list_height);
    }
 
    /*
@@ -128,8 +143,9 @@ void lemon_menu::load_menus()
    int result = cfg_parse(cfg, path.c_str());
    
    if (result == CFG_FILE_ERROR) {
-      perror(path.c_str());
-      throw bad_lemon("load_menus: file error");
+      // file error usually means file not found, warn and load empty menu
+      log << warn << "load_menus: file error: " << path << endl;
+      cfg_parse_buf(cfg, "");
    } else if (result == CFG_PARSE_ERROR) {
       throw bad_lemon("load_menus: parse error");
    }
@@ -242,6 +258,13 @@ void lemon_menu::render()
    SDL_Surface* item_surface;
    SDL_Rect item_rect;
    
+   // if the menu doesn't have any children, update the screen and return
+   if (!_current->has_children()) {
+      SDL_BlitSurface(_buffer, NULL, _screen, NULL);
+      SDL_UpdateRect(_screen, 0, 0, 0, 0);
+      return;
+   }
+   
    // get the selected item to a surface
    item_surface = _current->selected()->draw(_list_font);
    
@@ -302,9 +325,7 @@ void lemon_menu::render()
    }
 
    // update the screen
-   if (SDL_BlitSurface(_buffer, NULL, _screen, NULL))
-      throw bad_lemon("render: double buffer blit failed");
-
+   SDL_BlitSurface(_buffer, NULL, _screen, NULL);
    SDL_UpdateRect(_screen, 0, 0, 0, 0);
 }
 
@@ -422,6 +443,8 @@ void lemon_menu::handle_snap()
 
 void lemon_menu::handle_activate()
 {
+   if (!_current->has_children()) return;
+   
    item* item = _current->selected();
    if (typeid(menu) == typeid(*item)) {
       handle_down_menu();
@@ -489,37 +512,11 @@ void lemon_menu::handle_show_hide()
 
 void lemon_menu::update_snap()
 {
-   item* item = _current->selected();
-   
-   if (typeid(game) == typeid(*item)) {
-      get_game_snap();
+   if (_current->has_children()) {
+      item* item = _current->selected();
+      _snap = item->snapshot();
+      if (_snap) render();
    }
-   
-   /* Roland's origional version would iterate through all games in the menu and
-    * look for four game snapshots to be placed in a 2x2 grid.  Would be cool if
-    * this was not just limited to a 2x2 grid but the performance would be horrible!
-    * So, this is skipped until something better can be conjured up.
-   if (typeid(menu) == typeid(*item)) {
-      get_menu_snap();
-   }*/
-}
-
-void lemon_menu::get_game_snap()
-{
-   game* g = (game*)_current->selected();
-
-   stringstream img;
-   img << g_opts.get_string(KEY_MAME_SNAPS_PATH) << '/' << g->rom() << "/0000.png";
-   
-   log << debug << "get_game_snap: " << img.str() << endl;
-
-	_snap = IMG_Load(img.str().c_str());
-	if (_snap) render();
-}
-
-void lemon_menu::get_menu_snap()
-{
-   
 }
 
 void lemon_menu::reset_snap_timer()
@@ -553,6 +550,16 @@ game::game(const char* rom, const char* name, const char* params) :
 {
    _color = RGB_SDL_Color(g_opts.get_int(KEY_GAME_COLOR));
    _hover = RGB_SDL_Color(g_opts.get_int(KEY_GAME_HOVER_COLOR));
+}
+
+SDL_Surface* game::snapshot()
+{
+   stringstream img;
+   img << g_opts.get_string(KEY_MAME_SNAPS_PATH) << '/' << rom() << "/0000.png";
+   
+   log << debug << "get_game_snap: " << img.str() << endl;
+
+	return IMG_Load(img.str().c_str());
 }
 
 SDL_Surface* game::draw(TTF_Font* font) const

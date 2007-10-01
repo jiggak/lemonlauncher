@@ -71,6 +71,12 @@ public:
     * @return newly created surface
     */
    virtual SDL_Surface* draw(TTF_Font* font) const = 0;
+   
+   /**
+    * Generates a snapshot for the item
+    * @return newly created surface, or NULL if no snapshot
+    */
+   virtual SDL_Surface* snapshot() = 0;
 };
 
 /**
@@ -93,15 +99,15 @@ public:
          delete *i;
    }
 
-   /**
-    * Returns currently selected child
-    */
+   /** Returns true if there is 1 or more children */
+   const bool has_children() const
+   { return ! _children.empty(); }
+   
+   /** Returns currently selected child */
    item* selected()
    { return _children[_selected]; }
    
-   /**
-    * Returns currently selected child as a bi-directional iterator
-    */
+   /** Returns currently selected child as a bi-directional iterator */
    vector<item*>::iterator selected_begin()
    { return _children.begin()+_selected; }
 
@@ -158,6 +164,12 @@ public:
    { return _name.c_str(); }
    
    SDL_Surface* draw(TTF_Font* font) const;
+   
+   /* Roland's origional version would iterate through all games in the menu and
+    * look for four game snapshots to be placed in a 2x2 grid.  Would be cool if
+    * this was not just limited to a 2x2 grid but the performance would be horrible!
+    * So, this is skipped until something better can be conjured up. */
+   SDL_Surface* snapshot() { return NULL; }
 };
 
 /**
@@ -189,6 +201,7 @@ public:
    { return _name.c_str(); }
    
    SDL_Surface* draw(TTF_Font* font) const;
+   SDL_Surface* snapshot();
 };
 
 class lemon_menu {
@@ -209,10 +222,6 @@ private:
    
    const int _page_size;
    const int _title_color;
-   const int _menu_color;
-   const int _menu_hover_color;
-   const int _game_color;
-   const int _game_hover_color;
    const int _snap_alpha;
    const int _snap_delay;
 
@@ -222,8 +231,6 @@ private:
 
    void reset_snap_timer();
    void update_snap();
-   void get_game_snap();
-   void get_menu_snap();
 
    void handle_up();
    void handle_down();

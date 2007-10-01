@@ -1,0 +1,16 @@
+Lemon Launcher is a simple mame front-end intended for use inside
+an arcade machine.
+
+Requirements
+============
+
+Lemon Launcher should work with most platforms that support SDL.
+I've tested Linux, Mac OS X, and Windows.  These are the dependancies:
+
+* SDL
+* SDL_image (with at least PNG support)
+* SDL_ttf
+* SDL_gfx
+* libConfuse
+
+

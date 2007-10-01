@@ -11,6 +11,7 @@ AM_INIT_AUTOMAKE
 # use c++ for checks
 AC_LANG_CPLUSPLUS
 
+AC_PROG_CC
 AC_PROG_CXX
 
 AC_CXX_NAMESPACES
@@ -21,6 +22,13 @@ AC_CXX_HAVE_STL
 AC_ARG_WITH([confdir],
   AC_HELP_STRING([--with-confdir=DIR], [Where to find conf files ($HOME/.lemonlauncher)]),
   AC_DEFINE_UNQUOTED(HAVE_CONF_DIR, $withval, [Define to the directory of conf files]))
+
+###########################################################
+# set default ttf font file
+AC_ARG_WITH([default-font],
+  AC_HELP_STRING([--with-default-font=FILE], [TrueType font to use as default font]),
+  [DEFAULT_FONT="$withval"], [DEFAULT_FONT='$(top_srcdir)/VeraBd.ttf'])
+AC_SUBST(DEFAULT_FONT)
 
 ###########################################################
 # check for libraries, always error if not found

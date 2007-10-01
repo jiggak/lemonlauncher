@@ -20,7 +20,6 @@
 #include "options.h"
 #include "error.h"
 
-#include <stdio.h>
 #include <string>
 #include <iostream>
 
@@ -38,12 +37,12 @@ void options::load(const char* conf_dir)
    cfg_opt_t opts[] = {
       CFG_INT(KEY_LOGLEVEL, 2, CFGF_NONE),
       
-      CFG_INT(KEY_SCREEN_WIDTH, 0, CFGF_NODEFAULT),
-      CFG_INT(KEY_SCREEN_HEIGHT, 0, CFGF_NODEFAULT),
-      CFG_INT(KEY_SCREEN_BPP, 0, CFGF_NODEFAULT),
+      CFG_INT(KEY_SCREEN_WIDTH, 640, CFGF_NONE),
+      CFG_INT(KEY_SCREEN_HEIGHT, 480, CFGF_NONE),
+      CFG_INT(KEY_SCREEN_BPP, 24, CFGF_NONE),
       CFG_BOOL(KEY_FULLSCREEN, cfg_false, CFGF_NONE),
       
-      CFG_STR(KEY_FONT_FILE, 0, CFGF_NODEFAULT),
+      CFG_STR(KEY_FONT_FILE, "", CFGF_NONE),
       CFG_INT(KEY_TITLE_HEIGHT, 40, CFGF_NONE),
       CFG_INT(KEY_TITLE_COLOR, 0xefefef, CFGF_NONE),
       CFG_INT(KEY_LIST_HEIGHT, 30, CFGF_NONE),
@@ -55,7 +54,7 @@ void options::load(const char* conf_dir)
       CFG_INT(KEY_SNAPSHOT_DELAY, 500, CFGF_NONE),
       CFG_INT(KEY_PAGE_SIZE, 15, CFGF_NONE),
       
-      CFG_STR(KEY_MAME_PATH, 0, CFGF_NODEFAULT),
+      CFG_STR(KEY_MAME_PATH, "mame", CFGF_NONE),
       CFG_STR(KEY_MAME_PARAMS, "", CFGF_NONE),
       CFG_STR(KEY_MAME_SNAPS_PATH, "", CFGF_NONE),
       
@@ -85,8 +84,8 @@ void options::load(const char* conf_dir)
    int result = cfg_parse(_cfg, path.c_str());
    
    if (result == CFG_FILE_ERROR) {
-      perror(path.c_str());
-      throw bad_lemon("options: file error");
+      log << warn << "options: file error, using defaults" << endl;
+      cfg_parse_buf(_cfg, "");
    } else if (result == CFG_PARSE_ERROR) {
       throw bad_lemon("options: parse error");
    }
