@@ -55,6 +55,9 @@ int main(int argc, char** argv)
    // hide mouse cursor
    SDL_ShowCursor(SDL_DISABLE);
    
+   // enable key-repeat, use defaults delay and interval for now
+   SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, SDL_DEFAULT_REPEAT_INTERVAL);
+   
    // create a screen to draw on
    SDL_Surface* screen;
    

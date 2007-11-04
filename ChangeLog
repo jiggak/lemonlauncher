@@ -7,6 +7,7 @@
   be replaced with the short rom name.  this removes the need for the params
   option since the "mame" path can contain command line switches.
 + dissable sdl mouse cursor
++ enabled key repeat (default delay/interval)
 
  Oct  01/2007
 =======================
