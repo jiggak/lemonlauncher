@@ -1,3 +1,13 @@
+ Nov 04/2007
+=======================
++ removed "params" option (not needed, see below)
++ renamed "path" option to "mame"
++ renamed "snaps" option to "snap"
++ "mame" and "snap" path options must contain the '%r' specifier which will
+  be replaced with the short rom name.  this removes the need for the params
+  option since the "mame" path can contain command line switches.
++ dissable sdl mouse cursor
+
  Oct  01/2007
 =======================
 + made option files completely optional

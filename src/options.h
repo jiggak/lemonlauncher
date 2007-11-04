@@ -47,9 +47,8 @@ namespace ll {
 #define KEY_PAGE_SIZE      "page_size"
 
 /* MAME settings */
-#define KEY_MAME_PATH       "path"
-#define KEY_MAME_PARAMS     "params"
-#define KEY_MAME_SNAPS_PATH "snaps"
+#define KEY_MAME_PATH      "mame"
+#define KEY_MAME_SNAP_PATH "snap"
 
 /* Key mapping */
 #define KEY_KEYCODE_EXIT      "exit"

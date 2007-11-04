@@ -55,8 +55,7 @@ void options::load(const char* conf_dir)
       CFG_INT(KEY_PAGE_SIZE, 15, CFGF_NONE),
       
       CFG_STR(KEY_MAME_PATH, "mame", CFGF_NONE),
-      CFG_STR(KEY_MAME_PARAMS, "", CFGF_NONE),
-      CFG_STR(KEY_MAME_SNAPS_PATH, "", CFGF_NONE),
+      CFG_STR(KEY_MAME_SNAP_PATH, "", CFGF_NONE),
       
       CFG_INT(KEY_KEYCODE_EXIT, 27, CFGF_NONE),
       CFG_INT(KEY_KEYCODE_RELOAD, 49, CFGF_NONE),

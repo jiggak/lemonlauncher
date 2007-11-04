@@ -450,22 +450,24 @@ void lemon_menu::handle_run()
 {
    game* g = (game*)_current->selected();
 
-   bool full = g_opts.get_bool(KEY_FULLSCREEN);
-   const char* mame_path = g_opts.get_string(KEY_MAME_PATH);
-   const char* mame_params = g_opts.get_string(KEY_MAME_PARAMS);
+   //bool full = g_opts.get_bool(KEY_FULLSCREEN);
+   string cmd(g_opts.get_string(KEY_MAME_PATH));
 	
    log << info << "handle_run: launching game " << g->text() << endl;
    
-	if (full) SDL_WM_ToggleFullScreen(_screen);
+	//if (full) SDL_WM_ToggleFullScreen(_screen);
 
-   stringstream cmd;
-   cmd << mame_path << ' ' << mame_params << ' ' << g->rom() << ' ' << g->params();
+   size_t pos = cmd.find("%r");
+   if (pos == string::npos)
+      throw bad_lemon("mame path missing %r specifier");
+   
+   cmd.replace(pos, 2, g->rom());
+   
+   log << debug << "handle_run: " << cmd << endl;
 
-   log << debug << "handle_run: " << cmd.str() << endl;
+   system(cmd.c_str());
 
-   system(cmd.str().c_str());
-
-	if (full) SDL_WM_ToggleFullScreen(_screen);
+	//if (full) SDL_WM_ToggleFullScreen(_screen);
 
    render();
 
@@ -547,12 +549,17 @@ game::game(const char* rom, const char* name, const char* params) :
 
 SDL_Surface* game::snapshot()
 {
-   stringstream img;
-   img << g_opts.get_string(KEY_MAME_SNAPS_PATH) << '/' << rom() << "/0000.png";
+   string img(g_opts.get_string(KEY_MAME_SNAP_PATH));
    
-   log << debug << "get_game_snap: " << img.str() << endl;
+   size_t pos = img.find("%r");
+   if (pos == string::npos)
+      throw bad_lemon("snap path missing %r specifier");
+   
+   img.replace(pos, 2, rom());
+   
+   log << debug << "get_game_snap: " << img << endl;
 
-	return IMG_Load(img.str().c_str());
+	return IMG_Load(img.c_str());
 }
 
 SDL_Surface* game::draw(TTF_Font* font) const

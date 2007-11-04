@@ -52,6 +52,9 @@ int main(int argc, char** argv)
    // initialize sdl
    SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO | SDL_INIT_TIMER);
    
+   // hide mouse cursor
+   SDL_ShowCursor(SDL_DISABLE);
+   
    // create a screen to draw on
    SDL_Surface* screen;
    
