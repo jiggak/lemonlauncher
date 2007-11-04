@@ -449,13 +449,14 @@ void lemon_menu::handle_activate()
 void lemon_menu::handle_run()
 {
    game* g = (game*)_current->selected();
-
-   //bool full = g_opts.get_bool(KEY_FULLSCREEN);
    string cmd(g_opts.get_string(KEY_MAME_PATH));
 	
    log << info << "handle_run: launching game " << g->text() << endl;
    
-	//if (full) SDL_WM_ToggleFullScreen(_screen);
+   // this is required when lemon launcher is full screen for some reason
+   // otherwise mame freezes and all the processes have to be kill manually
+   bool full = g_opts.get_bool(KEY_FULLSCREEN);
+	if (full) SDL_WM_ToggleFullScreen(_screen);
 
    size_t pos = cmd.find("%r");
    if (pos == string::npos)
@@ -467,7 +468,7 @@ void lemon_menu::handle_run()
 
    system(cmd.c_str());
 
-	//if (full) SDL_WM_ToggleFullScreen(_screen);
+	if (full) SDL_WM_ToggleFullScreen(_screen);
 
    render();
 
