@@ -8,6 +8,7 @@
   option since the "mame" path can contain command line switches.
 + dissable sdl mouse cursor
 + enabled key repeat (default delay/interval)
++ removed delayed event queue resuming after mame exits
 
  Oct  01/2007
 =======================

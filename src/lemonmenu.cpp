@@ -470,15 +470,11 @@ void lemon_menu::handle_run()
 
 	if (full) SDL_WM_ToggleFullScreen(_screen);
 
+   // clear the event queue
+   SDL_Event event;
+   while (SDL_PollEvent(&event));
+   
    render();
-
-	// dump the event queue
-	SDL_Delay(1500);
-	SDL_PumpEvents();
-
-	SDL_Event evt;
-	while (SDL_PeepEvents(&evt, 1, SDL_GETEVENT, 0xFFFFFFFF) > 0)
-		SDL_PumpEvents();
 }
 
 void lemon_menu::handle_up_menu()
