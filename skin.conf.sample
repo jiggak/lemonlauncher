@@ -46,5 +46,5 @@ snapshot {
    dimensions = { full, full }
    
    # amount to fade game snapshots (0x00 - 0xff)
-   alpha = 0xc8
+   alpha = 0x96
 }

@@ -113,7 +113,7 @@ layout::layout(const char* skin, Uint16 width, Uint16 height) :
    cfg_opt_t snap_opts[] = {
       CFG_INT_LIST("position", "{0,56}", CFGF_NONE),
       CFG_INT_LIST_CB("dimensions", "{full,full}", CFGF_NONE, &cb_dimension),
-      CFG_INT("alpha", 0xc8, CFGF_NONE),
+      CFG_INT("alpha", 0x96, CFGF_NONE),
       CFG_END()
    };
    
