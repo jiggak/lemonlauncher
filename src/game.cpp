@@ -34,7 +34,7 @@ SDL_Surface* game::snapshot()
    
    size_t pos = img.find("%r");
    if (pos == string::npos) {
-      log << warn << "game::snapshot: snap option missing %r specifier");
+      log << warn << "game::snapshot: snap option missing %r specifier" << endl;
       return NULL;
    }
    
