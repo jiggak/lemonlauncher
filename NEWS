@@ -1,3 +1,23 @@
+  November 10 2007
+===========================================
+Version 0.0.5 should be ready to release now.  It has a number of important
+features and updates:
+
+ * simple skinning system
+ * key-repeat (hold down key to scroll through list)
+ * fixed "keys dont work" bug after game exits
+ * dissabled mouse cursor
+ * merged "path" and "params" option in to "mame" option which should
+   contain the mame path plus and required parameters along with %r
+   format specifier where the rom name should be substituted
+ * "snap" option also uses %r for rom name substitution which yields
+   better control over path and image type
+
+There's always a ToDo list:
+ * still would like to work on the menu system, either create a tool for
+   generating the menus or add automatic menu generating
+
+
   October 1 2007
 ===========================================
 The configuration file and the games list are completely optional now.

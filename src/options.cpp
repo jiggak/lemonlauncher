@@ -42,19 +42,10 @@ void options::load(const char* conf_dir)
       CFG_INT(KEY_SCREEN_BPP, 24, CFGF_NONE),
       CFG_BOOL(KEY_FULLSCREEN, cfg_false, CFGF_NONE),
       
-      CFG_STR(KEY_FONT_FILE, "", CFGF_NONE),
-      CFG_INT(KEY_TITLE_HEIGHT, 40, CFGF_NONE),
-      CFG_INT(KEY_TITLE_COLOR, 0xefefef, CFGF_NONE),
-      CFG_INT(KEY_LIST_HEIGHT, 30, CFGF_NONE),
-      CFG_INT(KEY_MENU_COLOR, 0xc2f4ff, CFGF_NONE),
-      CFG_INT(KEY_MENU_HOVER_COLOR, 0x32E4ff, CFGF_NONE),
-      CFG_INT(KEY_GAME_COLOR, 0xefefef, CFGF_NONE),
-      CFG_INT(KEY_GAME_HOVER_COLOR, 0xffe432, CFGF_NONE),
-      CFG_INT(KEY_SNAPSHOT_ALPHA, 0xc8, CFGF_NONE),
+      CFG_STR(KEY_SKIN_FILE, "", CFGF_NONE),
       CFG_INT(KEY_SNAPSHOT_DELAY, 500, CFGF_NONE),
-      CFG_INT(KEY_PAGE_SIZE, 15, CFGF_NONE),
       
-      CFG_STR(KEY_MAME_PATH, "mame", CFGF_NONE),
+      CFG_STR(KEY_MAME_PATH, "mame %r", CFGF_NONE),
       CFG_STR(KEY_MAME_SNAP_PATH, "", CFGF_NONE),
       
       CFG_INT(KEY_KEYCODE_EXIT, 27, CFGF_NONE),
@@ -75,11 +66,8 @@ void options::load(const char* conf_dir)
       CFG_END()
    };
    
-   string path(_conf_dir);
-   path.append("/lemonlauncher.conf");
-   
    _cfg = cfg_init(opts, CFGF_NONE);
-   int result = cfg_parse(_cfg, path.c_str());
+   int result = cfg_parse(_cfg, locate("lemonlauncher.conf"));
    
    if (result == CFG_FILE_ERROR) {
       log << warn << "options: file error, using defaults" << endl;
@@ -100,3 +88,10 @@ int options::get_int(const char* key) const
 
 const char* options::get_string(const char* key) const
 { return cfg_getstr(_cfg, key); }
+
+const char* options::locate(const char* file) const
+{
+   string path(_conf_dir);
+   path.append("/").append(file);
+   return path.c_str();
+}

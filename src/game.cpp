@@ -17,60 +17,36 @@
  * along with Lemon Launcher; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-#ifndef LEMONMENU_H_
-#define LEMONMENU_H_
 
-#include <SDL/SDL.h>
-#include <SDL/SDL_ttf.h>
-
-#include "layout.h"
+#include <SDL/SDL_image.h>
+#include "game.h"
 #include "menu.h"
 #include "options.h"
+#include "error.h"
 #include "log.h"
 
-namespace ll {
+using namespace ll;
+using namespace std;
 
-class lemon_menu {
-private:
-   SDL_Surface* _screen;
-   SDL_Surface* _buffer;
-   SDL_TimerID  _snap_timer;
+SDL_Surface* game::snapshot()
+{
+   string img(g_opts.get_string(KEY_MAME_SNAP_PATH));
    
-   layout* _layout;
-
-   bool _running;
-   bool _show_hidden;
-
-   menu* _top;
-   menu* _current;
+   size_t pos = img.find("%r");
+   if (pos == string::npos) {
+      log << warn << "game::snapshot: snap option missing %r specifier");
+      return NULL;
+   }
    
-   const int _snap_delay;
-
-   void load_menus();
-
-   void render();
-
-   void reset_snap_timer();
-   void update_snap();
-
-   void handle_up();
-   void handle_down();
-   void handle_pgup();
-   void handle_pgdown();
-   void handle_run();
-   void handle_up_menu();
-   void handle_down_menu();
-   void handle_activate();
-   void handle_show_hide();
+   img.replace(pos, 2, rom());
    
-public:
-   lemon_menu(SDL_Surface* screen);
-   
-   ~lemon_menu();
+   log << debug << "game::snapshot: " << img << endl;
 
-   void main_loop();
-};
+   return IMG_Load(img.c_str());
+}
 
-} // end namespace declaration
-
-#endif /*LEMONMENU_H_*/
+SDL_Surface* game::draw(TTF_Font* font, SDL_Color color, SDL_Color hover_color) const
+{
+   SDL_Color c = this == ((menu*)parent())->selected()? hover_color : color;
+   return TTF_RenderText_Blended(font, text(), c);
+}

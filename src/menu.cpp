@@ -17,60 +17,41 @@
  * along with Lemon Launcher; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-#ifndef LEMONMENU_H_
-#define LEMONMENU_H_
 
-#include <SDL/SDL.h>
-#include <SDL/SDL_ttf.h>
-
-#include "layout.h"
 #include "menu.h"
 #include "options.h"
-#include "log.h"
 
-namespace ll {
+using namespace ll;
 
-class lemon_menu {
-private:
-   SDL_Surface* _screen;
-   SDL_Surface* _buffer;
-   SDL_TimerID  _snap_timer;
+menu::~menu()
+{
+   for (vector<item*>::iterator i = _children.begin(); i != _children.end(); i++)
+      delete *i;
+}
+
+const bool menu::select_next(int step)
+{
+   int last = _children.size()-1;
+   if (_selected < last) {
+      _selected = _selected + step <= last? _selected + step : last;
+      return true;
+   }
    
-   layout* _layout;
+   return false;
+}
 
-   bool _running;
-   bool _show_hidden;
-
-   menu* _top;
-   menu* _current;
+const bool menu::select_previous(int step)
+{
+   if (_selected > 0) {
+      _selected = _selected - step >= 0? _selected - step : 0;
+      return true;
+   }
    
-   const int _snap_delay;
+   return false;
+}
 
-   void load_menus();
-
-   void render();
-
-   void reset_snap_timer();
-   void update_snap();
-
-   void handle_up();
-   void handle_down();
-   void handle_pgup();
-   void handle_pgdown();
-   void handle_run();
-   void handle_up_menu();
-   void handle_down_menu();
-   void handle_activate();
-   void handle_show_hide();
-   
-public:
-   lemon_menu(SDL_Surface* screen);
-   
-   ~lemon_menu();
-
-   void main_loop();
-};
-
-} // end namespace declaration
-
-#endif /*LEMONMENU_H_*/
+SDL_Surface* menu::draw(TTF_Font* font, SDL_Color color, SDL_Color hover_color) const
+{
+   SDL_Color c = parent() && this == ((menu*)parent())->selected()? hover_color : color;
+   return TTF_RenderText_Blended(font, text(), c);
+}

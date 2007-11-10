@@ -1,3 +1,24 @@
+ Nov 10/2007
+=======================
++ added option for setting skin file path
++ fixed bug in menu class (garbage in selected index)
++ appended .sample to all sample conf files
++ set some reasonable defaults for skin/layout
++ fixed missing %r in default mame option
++ removed exception throw when snap option is missing %r (warn instead)
+
+ Nov 09/2007
+=======================
++ finished implementing layout class
++ removed ui related options from lemonlauncher.conf
++ removed page_size option since it can be calculated
++ added text justification option for list items
+
+ Nov 08/2007
+=======================
++ separated menu elements (item/menu/game) into their own header files
++ new layout class to handle rendering of the interface
+
  Nov 04/2007
 =======================
 + removed "params" option (not needed, see below)

@@ -34,17 +34,8 @@ namespace ll {
 #define KEY_FULLSCREEN    "fullscreen"
 
 /* Ui settings */
-#define KEY_FONT_FILE      "font"
-#define KEY_TITLE_HEIGHT   "title_height"
-#define KEY_TITLE_COLOR    "title_color"
-#define KEY_LIST_HEIGHT    "list_height"
-#define KEY_MENU_COLOR     "menu_color"
-#define KEY_MENU_HOVER_COLOR "menu_hover_color"
-#define KEY_GAME_COLOR     "game_color"
-#define KEY_GAME_HOVER_COLOR "game_hover_color"
-#define KEY_SNAPSHOT_ALPHA "snapshot_alpha"
+#define KEY_SKIN_FILE      "skin"
 #define KEY_SNAPSHOT_DELAY "snapshot_delay"
-#define KEY_PAGE_SIZE      "page_size"
 
 /* MAME settings */
 #define KEY_MAME_PATH      "mame"
@@ -90,24 +81,17 @@ public:
    /** Parses conf conf files from the conf file directory */
    void load(const char* conf_dir);
    
-   /** Returns conf file directory set by load method */
-   const char* conf_dir() const
-   { return _conf_dir; }
-   
-   /**
-    * 
-    */
+   /** Returns an option as a boolean */
    bool get_bool(const char* key) const;
    
-   /**
-    * 
-    */
+   /** Returns an option as an integer */
    int get_int(const char* key) const;
    
-   /**
-    *
-    */
+   /** Returns an option as a string */
    const char* get_string(const char* key) const;
+   
+   /** Returns full path to the given file relative to conf dir */
+   const char* locate(const char* file) const;
 };
 
 extern options g_opts;

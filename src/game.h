@@ -17,60 +17,47 @@
  * along with Lemon Launcher; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-#ifndef LEMONMENU_H_
-#define LEMONMENU_H_
+#ifndef GAME_H_
+#define GAME_H_
 
-#include <SDL/SDL.h>
-#include <SDL/SDL_ttf.h>
+#include "item.h"
+#include <string>
 
-#include "layout.h"
-#include "menu.h"
-#include "options.h"
-#include "log.h"
+using namespace std;
 
 namespace ll {
 
-class lemon_menu {
+/**
+ * Game item class
+ */
+class game : public item {
 private:
-   SDL_Surface* _screen;
-   SDL_Surface* _buffer;
-   SDL_TimerID  _snap_timer;
-   
-   layout* _layout;
+   string _rom;    // rom name
+   string _name;   // game name
+   string _params; // game specific mame parameters
 
-   bool _running;
-   bool _show_hidden;
-
-   menu* _top;
-   menu* _current;
-   
-   const int _snap_delay;
-
-   void load_menus();
-
-   void render();
-
-   void reset_snap_timer();
-   void update_snap();
-
-   void handle_up();
-   void handle_down();
-   void handle_pgup();
-   void handle_pgdown();
-   void handle_run();
-   void handle_up_menu();
-   void handle_down_menu();
-   void handle_activate();
-   void handle_show_hide();
-   
 public:
-   lemon_menu(SDL_Surface* screen);
-   
-   ~lemon_menu();
+   game(const char* rom, const char* name, const char* params) :
+      _rom(rom), _name(name), _params(params) { }
 
-   void main_loop();
+   virtual ~game() { }
+   
+   /** Returns the rom name */
+   const char* rom() const
+   { return _rom.c_str(); }
+
+   /** Returns mame parameters (if any) */
+   const char* params() const
+   { return _params.c_str(); }
+
+   /** Returns game name as item text */
+   const char* text() const
+   { return _name.c_str(); }
+   
+   SDL_Surface* draw(TTF_Font* font, SDL_Color color, SDL_Color hover_color) const;
+   SDL_Surface* snapshot();
 };
 
-} // end namespace declaration
+} // end namespace
 
-#endif /*LEMONMENU_H_*/
+#endif
