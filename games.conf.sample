@@ -12,6 +12,8 @@
 # Example:
 #
 # menu "My Games" {
+#   # sorted: optional: sort games alphabetically (defaults to true)
+#   sorted = true|false
 #   ...
 #   # rom:    required: rom file name
 #   # title:  required: friendly game name

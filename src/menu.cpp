@@ -20,6 +20,7 @@
 
 #include "menu.h"
 #include "options.h"
+#include <cctype>
 
 using namespace ll;
 
@@ -45,6 +46,38 @@ const bool menu::select_previous(int step)
    if (_selected > 0) {
       _selected = _selected - step >= 0? _selected - step : 0;
       return true;
+   }
+   
+   return false;
+}
+
+const bool menu::select_next_alpha()
+{
+   // first character of selected child in lowercase
+   int sel_ch = tolower(_children[_selected]->text()[0]);
+
+   // iterate over children to find next in alphabetic order
+   for (int i=_selected, last=_children.size()-1; i <= last; i++) {
+      if (tolower(_children[i]->text()[0]) > sel_ch) {
+         _selected = i;
+         return true;
+      }
+   }
+   
+   return false;
+}
+
+const bool menu::select_previous_alpha()
+{
+   // first character of selected child in lowercase
+   int sel_ch = tolower(_children[_selected]->text()[0]);
+
+   // iterate over children to find privious in alphabetic order
+   for (int i=_selected; i >= 0; i--) {
+      if (tolower(_children[i]->text()[0]) < sel_ch) {
+         _selected = i;
+         return true;
+      }
    }
    
    return false;

@@ -22,8 +22,10 @@
 #include "options.h"
 #include "error.h"
 
+#include <cstring>
 #include <confuse.h>
 #include <sstream>
+#include <algorithm>
 
 #define UPDATE_SNAP_EVENT 1
 
@@ -34,6 +36,13 @@ using namespace std;
  * Timer callback function
  */
 Uint32 snap_timer_callback(Uint32 interval, void *param);
+
+/**
+ * Compares the text property of two item pointers and returns true if the left
+ * is less than the right.
+ */
+bool cmp_item(item* left, item* right)
+{ return strcmp(left->text(), right->text()) < 0; }
 
 lemon_menu::lemon_menu(SDL_Surface* screen) :
    _screen(screen), _show_hidden(false), _snap_timer(0),
@@ -80,6 +89,7 @@ void lemon_menu::load_menus()
    };
    
    cfg_opt_t menu_opts[] = {
+      CFG_BOOL("sorted", cfg_true, CFGF_NONE),
       CFG_SEC("game", game_opts, CFGF_MULTI),
       CFG_END()
    };
@@ -117,6 +127,7 @@ void lemon_menu::load_menus()
       cfg_t* m = cfg_getnsec(cfg, "menu", i);
       
       const char* mtitle = cfg_title(m);
+      bool sorted = cfg_getbool(m, "sorted") == cfg_true;
       
       // "should" be safe to assume title is at least one charcter long 
       if (mtitle[0] != '.' || _show_hidden) {
@@ -137,6 +148,10 @@ void lemon_menu::load_menus()
             if (title[0] != '.' || _show_hidden)
                pmenu->add_child(new game(rom, title, params));
          }
+         
+         // sort the menu alphabeticly using game/item name
+         if (sorted)
+            sort(pmenu->first(), pmenu->last(), cmp_item);
       }
    }
    
@@ -162,62 +177,66 @@ void lemon_menu::main_loop()
    render();
    reset_snap_timer();
 
-   const int p1up_key = g_opts.get_int(KEY_KEYCODE_P1_UP);
-   const int p1down_key = g_opts.get_int(KEY_KEYCODE_P1_DOWN);
-   const int p1pgup_key = g_opts.get_int(KEY_KEYCODE_P1_PGUP);
-   const int p1pgdown_key = g_opts.get_int(KEY_KEYCODE_P1_PGDOWN);
-   const int p2up_key = g_opts.get_int(KEY_KEYCODE_P2_UP);
-   const int p2down_key = g_opts.get_int(KEY_KEYCODE_P2_DOWN);
-   const int p2pgup_key = g_opts.get_int(KEY_KEYCODE_P2_PGUP);
-   const int p2pgdown_key = g_opts.get_int(KEY_KEYCODE_P2_PGDOWN);
    const int exit_key = g_opts.get_int(KEY_KEYCODE_EXIT);
-   const int p1b1_key = g_opts.get_int(KEY_KEYCODE_P1_BTN1);
-   const int p1b2_key = g_opts.get_int(KEY_KEYCODE_P1_BTN2);
-   const int p2b1_key = g_opts.get_int(KEY_KEYCODE_P2_BTN1);
-   const int p2b2_key = g_opts.get_int(KEY_KEYCODE_P2_BTN2);
+   const int up_key = g_opts.get_int(KEY_KEYCODE_UP);
+   const int down_key = g_opts.get_int(KEY_KEYCODE_DOWN);
+   const int pgup_key = g_opts.get_int(KEY_KEYCODE_PGUP);
+   const int pgdown_key = g_opts.get_int(KEY_KEYCODE_PGDOWN);
    const int reload_key = g_opts.get_int(KEY_KEYCODE_RELOAD);
    const int toggle_key = g_opts.get_int(KEY_KEYCODE_TOGGLE);
+   const int select_key = g_opts.get_int(KEY_KEYCODE_SELECT);
+   const int back_key = g_opts.get_int(KEY_KEYCODE_BACK);
+   const int alphamod = g_opts.get_int(KEY_KEYCODE_ALPHAMOD);
 
    _running = true;
    while (_running) {
       SDL_Event event;
       SDL_WaitEvent(&event);
 
+      SDLKey key = event.key.keysym.sym;
+      SDLMod mod = event.key.keysym.mod;
+      
       switch (event.type) {
-		   case SDL_QUIT: {
-		      _running = false;
-		      break;
-         } case SDL_KEYDOWN: {
-	         int key = event.key.keysym.sym;
-
-	         if (key == exit_key)
-	            _running = false;
-	         else if (key == p1up_key || key == p2up_key)
-	            handle_up();
-	         else if (key == p1down_key || key == p2down_key)
-	            handle_down();
-	         else if (key == p1pgup_key || key == p2pgup_key)
-	            handle_pgup();
-	         else if (key == p1pgdown_key || key == p2pgdown_key)
-	            handle_pgdown();
-	         else if (key == p1b1_key || key == p2b1_key)
-	            handle_activate();
-	         else if (key == p1b2_key || key == p2b2_key)
-	            handle_up_menu();
-	         else if (key == reload_key)
-	         {
-	            load_menus();
-	            render();
-	         }
-	         else if (key == toggle_key)
-	            handle_show_hide();
-
-	         break;
-	      } case SDL_USEREVENT: {
-	         if (event.user.code == UPDATE_SNAP_EVENT)
-	            update_snap();
-	         break;
+      case SDL_QUIT:
+         _running = false;
+         
+         break;
+      case SDL_KEYUP:
+         if (key == exit_key) {
+            _running = false;
+         } else if (key == select_key) {
+            handle_activate();
+         } else if (key == back_key) {
+            handle_up_menu();
+         } else if (key == reload_key) {
+            load_menus();
+            render();
+         } else if (key == toggle_key) {
+            handle_show_hide();
          }
+         
+         break;
+      case SDL_KEYDOWN:
+         if (key == up_key) {
+            handle_up();
+         } else if (key == down_key) {
+            handle_down();
+         } else if (key == pgup_key && mod & alphamod) {
+            handle_alphadown();
+         } else if (key == pgdown_key && mod & alphamod) {
+            handle_alphaup();
+         } else if (key == pgup_key) {
+            handle_pgup();
+         } else if (key == pgdown_key) {
+            handle_pgdown();
+         }
+         
+         break;
+      case SDL_USEREVENT:
+         if (event.user.code == UPDATE_SNAP_EVENT)
+            update_snap();
+         
+         break;
       }
    }
    
@@ -260,6 +279,22 @@ void lemon_menu::handle_pgdown()
    }
 }
 
+void lemon_menu::handle_alphaup()
+{
+   if (_current->select_next_alpha()) {
+      reset_snap_timer();
+      render();
+   }
+}
+
+void lemon_menu::handle_alphadown()
+{
+   if (_current->select_previous_alpha()) {
+      reset_snap_timer();
+      render();
+   }
+}
+
 void lemon_menu::handle_activate()
 {
    if (!_current->has_children()) return;
@@ -276,13 +311,13 @@ void lemon_menu::handle_run()
 {
    game* g = (game*)_current->selected();
    string cmd(g_opts.get_string(KEY_MAME_PATH));
-	
+   
    log << info << "handle_run: launching game " << g->text() << endl;
    
    // this is required when lemon launcher is full screen for some reason
    // otherwise mame freezes and all the processes have to be kill manually
    bool full = g_opts.get_bool(KEY_FULLSCREEN);
-	if (full) SDL_WM_ToggleFullScreen(_screen);
+   if (full) SDL_WM_ToggleFullScreen(_screen);
 
    size_t pos = cmd.find("%r");
    if (pos == string::npos)
@@ -294,7 +329,7 @@ void lemon_menu::handle_run()
 
    system(cmd.c_str());
 
-	if (full) SDL_WM_ToggleFullScreen(_screen);
+   if (full) SDL_WM_ToggleFullScreen(_screen);
 
    // clear the event queue
    SDL_Event event;

@@ -57,6 +57,8 @@ private:
    void handle_down();
    void handle_pgup();
    void handle_pgdown();
+   void handle_alphaup();
+   void handle_alphadown();
    void handle_run();
    void handle_up_menu();
    void handle_down_menu();

@@ -18,20 +18,21 @@ snap = "/usr/games/lib/mame/snaps/%r.png"
 snapshot_delay = 500  # delay in milliseconds before displaying game snapshot
 
 ## Key mapping
-exit = 27       # escape
-reload = 49     # 1
-showhide = 50   # 2
+# default key mapping is based on default key codes for an ipac
 
-p1up = 273      # up
-p1down = 274    # down
-p1pgup = 276    # right
-p1pgdown = 275  # left
-p1button1 = 306 # left ctrl
-p1button2 = 308 # left alt
+exit = 27        # escape
 
-p2up = 114      # r
-p2down = 102    # f
-p2pgup = 100    # d
-p2pgdown = 103  # g
-p2button1 = 97  # a
-p2button2 = 115 # s
+up = 273         # up     p1-up
+down = 274       # down   p1-down
+pgup = 276       # right  p1-right
+pgdown = 275     # left   p1-left
+
+reload = 53      # 5      coin1
+showhide = 54    # 6      coin2
+
+select = 49      # 1      p1-start
+back = 50        # 2      p2-start
+
+# this option is not a keycode, it is a key modifier (see SDLMod enum)
+alphamod = 64    # lctrl  p1-btn1
+

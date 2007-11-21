@@ -1,3 +1,10 @@
+ Nov 21/2007
+=======================
++ added menu sorting in alphabetic order (enabled by default)
++ removed the double mapping of controls for certain functions
++ added alphabetic page up/down control
++ changed around key mapping option names to reflect their logical use
+
  Nov 10/2007
 =======================
 + added option for setting skin file path

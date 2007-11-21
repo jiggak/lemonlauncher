@@ -28,35 +28,30 @@ namespace ll {
 #define KEY_LOGLEVEL "loglevel"
 
 /* Screen settings */
-#define KEY_SCREEN_WIDTH  "width"     /* width of video mode  (int) */
-#define KEY_SCREEN_HEIGHT "height"    /* height of video mode (int) */
-#define KEY_SCREEN_BPP    "bitdepth"  /* pits per pixel */
-#define KEY_FULLSCREEN    "fullscreen"
+#define KEY_SCREEN_WIDTH   "width"     /* width of video mode  (int) */
+#define KEY_SCREEN_HEIGHT  "height"    /* height of video mode (int) */
+#define KEY_SCREEN_BPP     "bitdepth"  /* pits per pixel */
+#define KEY_FULLSCREEN     "fullscreen"
 
 /* Ui settings */
-#define KEY_SKIN_FILE      "skin"
-#define KEY_SNAPSHOT_DELAY "snapshot_delay"
+#define KEY_SKIN_FILE       "skin"
+#define KEY_SNAPSHOT_DELAY  "snapshot_delay"
 
 /* MAME settings */
-#define KEY_MAME_PATH      "mame"
-#define KEY_MAME_SNAP_PATH "snap"
+#define KEY_MAME_PATH       "mame"
+#define KEY_MAME_SNAP_PATH  "snap"
 
 /* Key mapping */
 #define KEY_KEYCODE_EXIT      "exit"
+#define KEY_KEYCODE_UP        "up"
+#define KEY_KEYCODE_DOWN      "down"
+#define KEY_KEYCODE_PGUP      "pgup"
+#define KEY_KEYCODE_PGDOWN    "pgdown"
 #define KEY_KEYCODE_RELOAD    "reload"
 #define KEY_KEYCODE_TOGGLE    "showhide"
-#define KEY_KEYCODE_P1_UP     "p1up"
-#define KEY_KEYCODE_P1_DOWN   "p1down"
-#define KEY_KEYCODE_P1_PGUP   "p1pgup"
-#define KEY_KEYCODE_P1_PGDOWN "p1pgdown"
-#define KEY_KEYCODE_P1_BTN1   "p1button1"
-#define KEY_KEYCODE_P1_BTN2   "p1button2"
-#define KEY_KEYCODE_P2_UP     "p2up"
-#define KEY_KEYCODE_P2_DOWN   "p2down"
-#define KEY_KEYCODE_P2_PGUP   "p2pgup"
-#define KEY_KEYCODE_P2_PGDOWN "p2pgdown"
-#define KEY_KEYCODE_P2_BTN1   "p2button1"
-#define KEY_KEYCODE_P2_BTN2   "p2button2"
+#define KEY_KEYCODE_SELECT    "select"
+#define KEY_KEYCODE_BACK      "back"
+#define KEY_KEYCODE_ALPHAMOD  "alphamod"
 
 /**
  * Class for reading configuration file.  Settings are accessed by passing

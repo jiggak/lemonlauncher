@@ -56,16 +56,32 @@ public:
    { return _children.begin()+_selected; }
 
    /**
-    * Attempts to select the child who is 'step' number of children ahead of current
+    * Attempts to select the child who is 'step' number of children
+    * after currently selected child
     * @return true if at least one child was skipped
     */
    const bool select_next(int step = 1);
 
    /**
-    * Attempts to select the child who is 'step' number of children behind of current
+    * Attempts to select the child who is 'step' number of children
+    * before currently selected child
     * @return true if at least one child was skipped
     */
    const bool select_previous(int step = 1);
+   
+   /**
+    * Attempts to select the child after the currently selected child
+    * in alphabetic order
+    * @return true if selection has changed
+    */
+   const bool select_next_alpha();
+
+   /**
+    * Attempts to select the child before the currently selected child
+    * in alphabetic order
+    * @return true if selection has changed
+    */
+   const bool select_previous_alpha();
 
    /**
     * Returns iterator to first child item
