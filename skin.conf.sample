@@ -7,7 +7,7 @@
 #
 # Dimensions option specifies the width and height.
 # Width and height must be integers.  To use all the available space
-# substitute the keyword "full".  The available space is determained by
+# substitute the keyword "full".  The available space is determined by
 # subtracting the position from the screen size.
 #
 # For example, if the screen size is 640x480 and position = { 0, 100 } and
@@ -17,7 +17,7 @@
 # text is rendered inside the region.  Valid values are left, right, center.
 #
 
-# path to ttf font file
+# path to truetype font file
 #font = "slicker.ttf"
 
 # path to background image

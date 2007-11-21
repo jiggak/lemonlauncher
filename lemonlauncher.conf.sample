@@ -35,4 +35,3 @@ back = 50        # 2      p2-start
 
 # this option is not a keycode, it is a key modifier (see SDLMod enum)
 alphamod = 64    # lctrl  p1-btn1
-
