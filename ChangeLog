@@ -1,3 +1,8 @@
+ Nov 26/2007
+=======================
++ auto-sort root menu
++ fixed list item being drawn below bottom bounds
+
  Nov 21/2007
 =======================
 + added menu sorting in alphabetic order (enabled by default)

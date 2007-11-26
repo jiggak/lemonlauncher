@@ -356,7 +356,7 @@ void layout::render(SDL_Surface* buffer, menu* current)
    
    // draw items bellow the selected item
    i = current->selected_begin();
-   while (i+1 != current->last() && yoff_bellow < bottom) {
+   while (i+1 != current->last() && yoff_bellow + _list_font_height < bottom) {
       i++;
       
       render_item(buffer, *i, yoff_bellow);

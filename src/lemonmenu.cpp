@@ -155,6 +155,9 @@ void lemon_menu::load_menus()
       }
    }
    
+   // always sort top menu
+   sort(_top->first(), _top->last(), cmp_item);
+   
    _current = _top;
    
    cfg_free(cfg);

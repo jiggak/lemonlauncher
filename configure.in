@@ -1,4 +1,4 @@
-AC_PREREQ(2.60)
+AC_PREREQ(2.59)
 
 AC_INIT([Lemon Launcher], [0.0.6], [josh@slashdev.ca])
 AC_CONFIG_AUX_DIR([config])
