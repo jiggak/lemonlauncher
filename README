@@ -82,17 +82,18 @@ this default at compile time using the --with-default-font switch to the
 configure script.  You can also set the current font in the lemonlauncher.conf.
 
 
-Skinning
-========
+Themes
+======
 
-Lemon launcher has a rather simple skinning system which gives you control
+Lemon launcher has a rather simple theme system which gives you control
 over the background image, font, size and position of ui elements (title,
-list, and snapshot sections).  See default/sample skin file for more details:
-/usr/share/lemon-launcher/skin.conf.sample
+list, and snapshot sections).  See default/sample theme file for more details:
+/usr/share/lemon-launcher/theme.conf.sample
 
-You can find an example of a piss poor attempt at a skin here:
-/usr/share/lemon-launcher/grey-skin.tar.gz
+You can find examples of themes here:
+/usr/share/lemon-launcher/grey-theme.tar.gz
+/usr/share/lemon-launcher/blue-theme.tar.gz
 
-To use a skin first make sure you have lemonlauncher.conf installed correctly
-(see Installation section), and create your skin.conf file.  Modify the "skin"
-option in lemonlauncher.conf to reflect the path of your skin.conf file.
+To use a theme first make sure you have lemonlauncher.conf installed correctly
+(see Installation section), and create your theme.conf file.  Modify the "theme"
+option in lemonlauncher.conf to reflect the path of your theme.conf file.

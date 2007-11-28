@@ -34,7 +34,7 @@ namespace ll {
 #define KEY_FULLSCREEN     "fullscreen"
 
 /* Ui settings */
-#define KEY_SKIN_FILE       "skin"
+#define KEY_SKIN_FILE       "theme"
 #define KEY_SNAPSHOT_DELAY  "snapshot_delay"
 
 /* MAME settings */

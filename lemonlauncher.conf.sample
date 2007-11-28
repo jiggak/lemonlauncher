@@ -14,7 +14,7 @@ mame = "mame %r"
 snap = "/usr/games/lib/mame/snaps/%r.png"
 
 ## UI behavior
-#skin = "/home/josh/.lemonlauncher/grey/skin.conf"
+#theme = "/home/josh/.lemonlauncher/blue/theme.conf"
 snapshot_delay = 500  # delay in milliseconds before displaying game snapshot
 
 ## Key mapping
