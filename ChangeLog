@@ -1,3 +1,8 @@
+ Nov 27/2007
+=======================
++ use stat in layout class to test if a file exists
++ added support for relative paths in theme files
+
  Nov 26/2007
 =======================
 + auto-sort root menu

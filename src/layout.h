@@ -24,6 +24,7 @@
 #include <SDL/SDL.h>
 #include <SDL/SDL_ttf.h>
 #include "menu.h"
+#include <string>
 
 #define DIMENSION_FULL -1
 
@@ -36,6 +37,8 @@ typedef enum { left_justify, right_justify, center_justify } justify_t;
  */
 class layout {
 private:
+   std::string _theme_dir;
+   
    SDL_Surface* _bg;
    SDL_Rect _screen;
    
@@ -70,6 +73,12 @@ private:
     * has the 'full' keyword. 
     */
    void parse_dimensions(SDL_Rect* rect, cfg_t* sec);
+   
+   /**
+    * When path is relative (no leading forward slash) return the path appended
+    * to the theme directory path.  Otherwise, return path unchanged.
+    */
+   void normalize(const char* path, string& new_path);
    
 public:
    /**

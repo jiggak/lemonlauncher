@@ -16,6 +16,10 @@
 # For elements that contain text, use the justify option to define how the
 # text is rendered inside the region.  Valid values are left, right, center.
 #
+# Paths (font file, background image) can be either absolute or relative. Paths
+# missing a leading forward slash are considered relative and the directory
+# containing this theme file is searched.
+#
 
 # path to truetype font file
 #font = "slicker.ttf"

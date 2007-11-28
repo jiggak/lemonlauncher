@@ -24,11 +24,11 @@
 #include "error.h"
 #include "default_font.h"
 
+#include <sys/stat.h>
 #include <SDL/SDL_rwops.h>
 #include <SDL/SDL_image.h>
 #include <SDL/SDL_rotozoom.h>
 #include <cstring>
-#include <fstream>
 
 #define RGB(r,g,b) (((Uint32)b << 16) | ((Uint32)g << 8) | ((Uint32)r))
 #define SDL_RGB(r,g,b) ((SDL_Color){r, g, b})
@@ -82,7 +82,7 @@ int cb_validate_pos_dims(cfg_t *cfg, cfg_opt_t *opt)
    return 0;
 }
 
-layout::layout(const char* skin, Uint16 width, Uint16 height) :
+layout::layout(const char* theme_file, Uint16 width, Uint16 height) :
    _snap(NULL)
 {
    _screen.x = 0;
@@ -133,17 +133,29 @@ layout::layout(const char* skin, Uint16 width, Uint16 height) :
    cfg_set_validate_func(cfg, "list", &cb_validate_pos_dims);
    cfg_set_validate_func(cfg, "snapshot", &cb_validate_pos_dims);
    
-   int result = cfg_parse(cfg, skin);
+   // parse theme file with libconfuse
+   int result = cfg_parse(cfg, theme_file);
    if (result == CFG_FILE_ERROR) {
       log << warn << "layout: file error, using defaults" << endl;
       cfg_parse_buf(cfg, "");
    } else if (result == CFG_PARSE_ERROR) {
       throw bad_lemon("layout: parse error");
+   } else {
+      // extract directory path from the path of the them file and
+      // only do so when cfg_parse returned success (file found/parsed)
+      
+      _theme_dir.assign(theme_file);
+      _theme_dir.erase(_theme_dir.rfind('/') + 1);
    }
    
-   const char* font_file = cfg_getstr(cfg, "font");
-   const char* bg_image = cfg_getstr(cfg, "background");
-   _bg = IMG_Load(bg_image);
+   string font, background;
+   
+   normalize(cfg_getstr(cfg, "font"), font);
+   normalize(cfg_getstr(cfg, "background"), background);
+   
+   const char* font_file = font.c_str();
+   
+   _bg = IMG_Load(background.c_str());
    if (_bg == NULL)
       log << warn << "layout: background image not found" << endl;
    
@@ -179,11 +191,8 @@ layout::layout(const char* skin, Uint16 width, Uint16 height) :
    
    _snap_alpha = cfg_getint(snapshot, "alpha");
    
-   // try and open the font file
-   fstream f(font_file, ios::in);
-   if (f.is_open()) {
-      f.close();
-      
+   struct stat fstat;
+   if (stat(font_file, &fstat) == 0) {
       log << debug << "layout: using font file " << font_file << endl;
       
       _title_font = TTF_OpenFont(font_file, _title_font_height);
@@ -198,7 +207,8 @@ layout::layout(const char* skin, Uint16 width, Uint16 height) :
          throw bad_lemon("layout: unable to create list font");
       }
    } else {
-      log << warn << "layout: font missing, using default" << endl;
+      log << warn << "layout: \"" << font_file << "\" not found" << endl;
+      log << warn << "layout: using default font" << endl;
       
       SDL_RWops* rw;
       
@@ -241,6 +251,16 @@ void layout::parse_dimensions(SDL_Rect* rect, cfg_t* sec)
    
    rect->w = w != DIMENSION_FULL? w : _screen.w - rect->x;
    rect->h = h != DIMENSION_FULL? h : _screen.h - rect->y;
+}
+
+void layout::normalize(const char* path, string& new_path)
+{
+   if (strlen(path) > 0 && path[0] != '/') {
+      new_path.assign(_theme_dir);
+      new_path.append(path);
+   } else {
+      new_path.assign(path);
+   }
 }
 
 void layout::render_item(SDL_Surface* buffer, item* i, int yoff)
