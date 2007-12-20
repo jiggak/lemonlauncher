@@ -11,7 +11,7 @@ fullscreen = false
 # Rotate defines the orientation of the interface.  If the right side of your
 # monitor is actually the top, set this to 'right'.  If your monitor is
 # mounted upside down, set this to 'flip'.
-rotate = normal  # normal, left, right, flip
+rotate = none  # none, left, right, flip
 
 
 ## Mame path strings

@@ -3,7 +3,7 @@
 Today I'm going to release 0.0.6.  This release has only a few minor changes
 and/or enhancements:
 
- + option for the interface orientation (left, right, flip, normal)
+ + option for the interface orientation (left, right, flip, none)
  + menu sorting (enabled by default) in alphabetic order
  + navigate games by paging alphabetically (speeds up navigating to a game)
  * revised the default key mapping, see README for defaults
