@@ -1,5 +1,6 @@
 # 0 = off, 1 = error, 2 = warning, 3 = info, 4 = debug
-loglevel = 4
+loglevel = 2
+
 
 ## Screen options
 width = 640
@@ -7,15 +8,23 @@ height = 480
 bitdepth = 24
 fullscreen = false
 
+# Rotate defines the orientation of the interface.  If the right side of your
+# monitor is actually the top, set this to 'right'.  If your monitor is
+# mounted upside down, set this to 'flip'.
+rotate = normal  # normal, left, right, flip
+
+
 ## Mame path strings
 # Both paths require the '%r' specifier to be present.  This specifier will
 # replaced with the rom name.
 mame = "mame %r"
 snap = "/usr/games/lib/mame/snaps/%r.png"
 
+
 ## UI behavior
 #theme = "/home/josh/.lemonlauncher/blue/theme.conf"
 snapshot_delay = 500  # delay in milliseconds before displaying game snapshot
+
 
 ## Key mapping
 # default key mapping is based on default key codes for an ipac

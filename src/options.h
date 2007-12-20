@@ -28,10 +28,11 @@ namespace ll {
 #define KEY_LOGLEVEL "loglevel"
 
 /* Screen settings */
-#define KEY_SCREEN_WIDTH   "width"     /* width of video mode  (int) */
-#define KEY_SCREEN_HEIGHT  "height"    /* height of video mode (int) */
-#define KEY_SCREEN_BPP     "bitdepth"  /* pits per pixel */
-#define KEY_FULLSCREEN     "fullscreen"
+#define KEY_SCREEN_WIDTH   "width"      /* width of video mode  (int) */
+#define KEY_SCREEN_HEIGHT  "height"     /* height of video mode (int) */
+#define KEY_SCREEN_BPP     "bitdepth"   /* pits per pixel */
+#define KEY_FULLSCREEN     "fullscreen" /* full screen mode (true/false) */
+#define KEY_ROTATE         "rotate"     /* rotate (0, 90, 180, 270) */
 
 /* Ui settings */
 #define KEY_SKIN_FILE       "theme"

@@ -62,6 +62,7 @@ private:
    Uint8 _snap_alpha;
    
    SDL_Surface* _snap;
+   SDL_Surface* _buffer;
    
    /** Render menu item at the given verticle offset */
    void render_item(SDL_Surface* buffer, item* i, int yoff);
@@ -82,9 +83,11 @@ private:
    
 public:
    /**
-    * Creates the layout from the given skin file
+    * Creates the layout from the given skin file.  The layout uses
+    * the screen dimentions and rotation to calculate the dimensions of
+    * the rendering buffer.
     */
-   layout(const char* skin, Uint16 width, Uint16 height);
+   layout(const char* skin, Uint16 width, Uint16 height, int rotate);
    
    /**
     * Free resources (fonts, surfaces)
@@ -101,9 +104,15 @@ public:
    void snap(SDL_Surface* snap);
    
    /**
-    * Render the layout
+    * Returns a pointer to the rendering surface
     */
-   void render(SDL_Surface* buffer, menu* current);
+   SDL_Surface* buffer() const
+   { return _buffer; }
+   
+   /**
+    * Render the layout for the current menu
+    */
+   void render(menu* current);
 };
 
 } // end namespace

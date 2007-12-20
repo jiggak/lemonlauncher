@@ -33,7 +33,6 @@ namespace ll {
 class lemon_menu {
 private:
    SDL_Surface* _screen;
-   SDL_Surface* _buffer;
    SDL_TimerID  _snap_timer;
    
    layout* _layout;
@@ -44,6 +43,7 @@ private:
    menu* _top;
    menu* _current;
    
+   const int _rotate;
    const int _snap_delay;
 
    void load_menus();

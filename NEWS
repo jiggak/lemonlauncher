@@ -1,3 +1,22 @@
+  December 20 2007
+===========================================
+Today I'm going to release 0.0.6.  This release has only a few minor changes
+and/or enhancements:
+
+ + option for the interface orientation (left, right, flip, normal)
+ + menu sorting (enabled by default) in alphabetic order
+ + navigate games by paging alphabetically (speeds up navigating to a game)
+ * revised the default key mapping, see README for defaults
+ + support relative paths in the theme.conf file
+ - no more double mapping of keys (email me if you need this feature back)
+
+There has been some interesting development on the topic of a better menu
+system.  We are working on using sqlite as a backend for the games/menu
+list.  This will provide a much more flexible system than the current static
+text file.  Watch for this to come in the next release or two, along with a
+command line tool for doing the brunt of the database generating.
+
+
   November 10 2007
 ===========================================
 Version 0.0.5 should be ready to release now.  It has a number of important

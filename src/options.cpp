@@ -28,6 +28,24 @@ namespace ll { options g_opts; }
 using namespace ll;
 using namespace std;
 
+int cb_rotate(cfg_t *cfg, cfg_opt_t *opt, const char *value, void *result)
+{
+   if (strcmp(value, "none") == 0)
+      *(int *)result = 0;
+   else if (strcmp(value, "right") == 0)
+      *(int *)result = 90;
+   else if (strcmp(value, "left") == 0)
+      *(int *)result = 270;
+   else if (strcmp(value, "flip") == 0)
+      *(int *)result = 180;
+   else {
+      cfg_error(cfg, "invalid value for option %s: %s", opt->name, value);
+      return -1;
+   }
+   
+   return 0;
+}
+
 options::options() : _cfg(NULL) { }
 
 void options::load(const char* conf_dir)
@@ -41,6 +59,7 @@ void options::load(const char* conf_dir)
       CFG_INT(KEY_SCREEN_HEIGHT, 480, CFGF_NONE),
       CFG_INT(KEY_SCREEN_BPP, 24, CFGF_NONE),
       CFG_BOOL(KEY_FULLSCREEN, cfg_false, CFGF_NONE),
+      CFG_INT_CB(KEY_ROTATE, 0, CFGF_NONE, &cb_rotate),
       
       CFG_STR(KEY_SKIN_FILE, "", CFGF_NONE),
       CFG_INT(KEY_SNAPSHOT_DELAY, 500, CFGF_NONE),

@@ -53,15 +53,15 @@ int cb_dimension(cfg_t *cfg, cfg_opt_t *opt, const char *value, void *result)
 int cb_justify(cfg_t *cfg, cfg_opt_t *opt, const char *value, void *result)
 {
    if (strcmp(value, "left") == 0)
-         *(justify_t *)result = left_justify;
-      else if (strcmp(value, "right") == 0)
-         *(justify_t *)result = right_justify;
-      else if (strcmp(value, "center") == 0)
-         *(justify_t *)result = center_justify;
-      else {
-         cfg_error(cfg, "invalid value for option %s: %s", opt->name, value);
-         return -1;
-      }
+      *(justify_t *)result = left_justify;
+   else if (strcmp(value, "right") == 0)
+      *(justify_t *)result = right_justify;
+   else if (strcmp(value, "center") == 0)
+      *(justify_t *)result = center_justify;
+   else {
+      cfg_error(cfg, "invalid value for option %s: %s", opt->name, value);
+      return -1;
+   }
    
    return 0;
 }
@@ -82,13 +82,32 @@ int cb_validate_pos_dims(cfg_t *cfg, cfg_opt_t *opt)
    return 0;
 }
 
-layout::layout(const char* theme_file, Uint16 width, Uint16 height) :
+layout::layout(const char* theme_file, Uint16 width, Uint16 height, int rotate):
    _snap(NULL)
 {
    _screen.x = 0;
    _screen.y = 0;
-   _screen.w = width;
-   _screen.h = height;
+   
+   if (rotate == 90 || rotate == 270) {
+      _screen.w = height;
+      _screen.h = width;
+   } else {
+      _screen.w = width;
+      _screen.h = height;
+   }
+   
+   /*
+    * Should I be using hardware surface?  Most docs/guides suggest no..
+    * I pass 0 as the alpha mask.  Surfaces don't need an alpha channel to
+    * do per-surface alpha and blitting.  In fact I can't seem to get the
+    * fadded snapshot blitting to work at all if the alpha channel is set!
+    */
+   _buffer = SDL_CreateRGBSurface(SDL_SWSURFACE,
+      _screen.w, _screen.h, 32, // w,h,bpp
+      0x000000ff, 0x0000ff00, 0x00ff0000, 0x00000000); // rgba masks, for big-endian
+
+   if (!_buffer)
+      throw bad_lemon("layout: unable to create back buffer");
    
    cfg_opt_t title_opts[] = {
       CFG_INT_LIST("position", "{0,0}", CFGF_NONE),
@@ -224,15 +243,13 @@ layout::layout(const char* theme_file, Uint16 width, Uint16 height) :
 
 layout::~layout()
 {
-   // free background image
-   SDL_FreeSurface(_bg);
+   SDL_FreeSurface(_bg);     // free background image
+   SDL_FreeSurface(_buffer); // free rendering buffer
    
-   // free fonts
-   TTF_CloseFont(_title_font);
+   TTF_CloseFont(_title_font); // free fonts
    TTF_CloseFont(_list_font);
    
-   // free snapshot if there is one
-   if (_snap)
+   if (_snap)  // free snapshot if there is one
       SDL_FreeSurface(_snap);
 }
 
@@ -286,13 +303,13 @@ void layout::render_item(SDL_Surface* buffer, item* i, int yoff)
    SDL_FreeSurface(surface);
 }
 
-void layout::render(SDL_Surface* buffer, menu* current)
+void layout::render(menu* current)
 {
    // clear back buffer
    if (_bg == NULL)
-      SDL_FillRect(buffer, &_screen, RGB(0,0,0));
+      SDL_FillRect(_buffer, &_screen, RGB(0,0,0));
    else
-      SDL_BlitSurface(_bg, NULL, buffer, &_screen);
+      SDL_BlitSurface(_bg, NULL, _buffer, &_screen);
 
    // draw the games screen shot
    if (_snap) {
@@ -316,7 +333,7 @@ void layout::render(SDL_Surface* buffer, menu* current)
       snap_rect.x = _snap_rect.x + (_snap_rect.w - snap_rect.w) / 2;
       snap_rect.y = _snap_rect.y + (_snap_rect.h - snap_rect.h) / 2;
       
-      SDL_BlitSurface(scaled, NULL, buffer, &snap_rect);
+      SDL_BlitSurface(scaled, NULL, _buffer, &snap_rect);
       
       // rotozoomer surface has alpha channel, clear it to do per-surface alpha blit
       scaled->format->Amask = 0x00000000;
@@ -324,7 +341,7 @@ void layout::render(SDL_Surface* buffer, menu* current)
       // fill scaled surface with black and do alpha blit
       SDL_FillRect(scaled, NULL, RGB(0,0,0));
       SDL_SetAlpha(scaled, SDL_SRCALPHA, _snap_alpha);
-      SDL_BlitSurface(scaled, NULL, buffer, &snap_rect);
+      SDL_BlitSurface(scaled, NULL, _buffer, &snap_rect);
       
       // free scaled surface
       SDL_FreeSurface(scaled);
@@ -341,7 +358,7 @@ void layout::render(SDL_Surface* buffer, menu* current)
       title_rect.x += (_title_rect.w - title->w) / 2;
    
    // draw title to back buffer
-   SDL_BlitSurface(title, NULL, buffer, &title_rect);
+   SDL_BlitSurface(title, NULL, _buffer, &title_rect);
 
    // finished with the title surface
    SDL_FreeSurface(title);
@@ -353,7 +370,7 @@ void layout::render(SDL_Surface* buffer, menu* current)
    int yoff = _list_rect.y + ((_list_rect.h - _list_font_height) / 2);
    
    // draw the selected item in the middle of the list region
-   render_item(buffer, current->selected(), yoff);
+   render_item(_buffer, current->selected(), yoff);
 
    // set absolute top/bottom of list area
    int top = _list_rect.y;
@@ -369,7 +386,7 @@ void layout::render(SDL_Surface* buffer, menu* current)
       do {
          --i;
          
-         render_item(buffer, *i, yoff_above);
+         render_item(_buffer, *i, yoff_above);
          yoff_above -= _list_font_height + _list_item_spacing;
       } while (i != current->first() && yoff_above > top);
    }
@@ -379,7 +396,7 @@ void layout::render(SDL_Surface* buffer, menu* current)
    while (i+1 != current->last() && yoff_bellow + _list_font_height < bottom) {
       i++;
       
-      render_item(buffer, *i, yoff_bellow);
+      render_item(_buffer, *i, yoff_bellow);
       
       yoff_bellow += _list_font_height + _list_item_spacing;
    }
