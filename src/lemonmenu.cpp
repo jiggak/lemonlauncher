@@ -91,7 +91,11 @@ void lemon_menu::load_menus()
    //};
 
    cfg_t* cfg = cfg_init(root_opts, CFGF_NONE);
-   int result = cfg_parse(cfg, g_opts.locate("games.conf"));
+   
+   string cfg_file("games.conf");
+   g_opts.resolve(cfg_file);
+   
+   int result = cfg_parse(cfg, cfg_file.c_str());
 
    if (result == CFG_FILE_ERROR) {
       // file error usually means file not found, warn and load empty menu

@@ -21,6 +21,7 @@
 #define OPTIONS_H_
 
 #include <confuse.h>
+#include <string>
 
 namespace ll {
 
@@ -86,8 +87,11 @@ public:
    /** Returns an option as a string */
    const char* get_string(const char* key) const;
    
-   /** Returns full path to the given file relative to conf dir */
-   const char* locate(const char* file) const;
+   /**
+    * Resolves the path to the file relative to the config dir (set at
+    * compile time).
+    */
+   void resolve(std::string& file) const;
 };
 
 extern options g_opts;

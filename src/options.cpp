@@ -81,7 +81,12 @@ void options::load(const char* conf_dir)
    };
    
    _cfg = cfg_init(opts, CFGF_NONE);
-   int result = cfg_parse(_cfg, locate("lemonlauncher.conf"));
+   
+   // resolve config file
+   string cfg_file("lemonlauncher.conf");
+   resolve(cfg_file);
+   
+   int result = cfg_parse(_cfg, cfg_file.c_str());
    
    if (result == CFG_FILE_ERROR) {
       log << warn << "options: file error, using defaults" << endl;
@@ -103,9 +108,10 @@ int options::get_int(const char* key) const
 const char* options::get_string(const char* key) const
 { return cfg_getstr(_cfg, key); }
 
-const char* options::locate(const char* file) const
+void options::resolve(string& file) const
 {
-   string path(_conf_dir);
-   path.append("/").append(file);
-   return path.c_str();
+   // For now this just inserts the config dir blindly at the beginning of
+   // the string.  A smarter version would check for existance of the file,
+   // or try a relative path too.
+   file.insert(0, 1, '/').insert(0, _conf_dir);
 }

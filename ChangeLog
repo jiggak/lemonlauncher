@@ -2,6 +2,7 @@
 =======================
 + added a 'rotate' option for controlling the orientation of the interface
 + any 'skin' verbiage has been changed to 'theme'
++ fixed possible memory leak in config file resolving function
 
  Nov 27/2007
 =======================
