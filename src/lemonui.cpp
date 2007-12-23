@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include "layout.h"
+#include "lemonui.h"
 #include "options.h"
 #include "log.h"
 #include "error.h"
@@ -82,33 +82,28 @@ int cb_validate_pos_dims(cfg_t *cfg, cfg_opt_t *opt)
    return 0;
 }
 
-layout::layout(const char* theme_file, Uint16 width, Uint16 height, int rotate):
-   _snap(NULL)
+lemonui::lemonui(const char* theme_file):
+   _bg(NULL), _snap(NULL), _buffer(NULL), _screen(NULL),
+   _title_font(NULL), _list_font(NULL)
 {
-   _screen.x = 0;
-   _screen.y = 0;
-   
-   if (rotate == 90 || rotate == 270) {
-      _screen.w = height;
-      _screen.h = width;
-   } else {
-      _screen.w = width;
-      _screen.h = height;
-   }
+   _rotate = g_opts.get_int(KEY_ROTATE);
+   _scrnw = g_opts.get_int(KEY_SCREEN_WIDTH);
+   _scrnh = g_opts.get_int(KEY_SCREEN_HEIGHT);
    
    /*
-    * Should I be using hardware surface?  Most docs/guides suggest no..
-    * I pass 0 as the alpha mask.  Surfaces don't need an alpha channel to
-    * do per-surface alpha and blitting.  In fact I can't seem to get the
-    * fadded snapshot blitting to work at all if the alpha channel is set!
+    * When rotation is requested we swap the width/height for the drawing
+    * buffer and simply draw as if it was oriented the same as the screen
+    * resolution.  Then after drawing is finished, the drawing buffer is
+    * rotated before it is blitted to the screen.
     */
-   _buffer = SDL_CreateRGBSurface(SDL_SWSURFACE,
-      _screen.w, _screen.h, 32, // w,h,bpp
-      0x000000ff, 0x0000ff00, 0x00ff0000, 0x00000000); // rgba masks, for big-endian
-
-   if (!_buffer)
-      throw bad_lemon("layout: unable to create back buffer");
-   
+   if (_rotate == 90 || _rotate == 270) {
+      _buffw = _scrnh;
+      _buffh = _scrnw;
+   } else {
+      _buffw = _scrnw;
+      _buffh = _scrnh;
+   }
+      
    cfg_opt_t title_opts[] = {
       CFG_INT_LIST("position", "{0,0}", CFGF_NONE),
       CFG_INT_LIST_CB("dimensions", "{full,56}", CFGF_NONE, &cb_dimension),
@@ -210,21 +205,25 @@ layout::layout(const char* theme_file, Uint16 width, Uint16 height, int rotate):
    
    _snap_alpha = cfg_getint(snapshot, "alpha");
    
+   // init the font engine
+   if (TTF_Init())
+      throw bad_lemon("layout: unable to start font engine");
+   
    struct stat fstat;
    if (stat(font_file, &fstat) == 0) {
       log << debug << "layout: using font file " << font_file << endl;
       
       _title_font = TTF_OpenFont(font_file, _title_font_height);
       if (!_title_font) {
+         // title/list font are same file, so only check for error once
+         
          log << error << TTF_GetError() << endl;
-         throw bad_lemon("layout: unable to create title font");
+         TTF_Quit();
+         
+         throw bad_lemon("layout: unable to create font");
       }
       
-      _list_font  = TTF_OpenFont(font_file, _list_font_height);
-      if (!_list_font) {
-         log << error << TTF_GetError() << endl;
-         throw bad_lemon("layout: unable to create list font");
-      }
+      _list_font = TTF_OpenFont(font_file, _list_font_height);
    } else {
       log << warn << "layout: \"" << font_file << "\" not found" << endl;
       log << warn << "layout: using default font" << endl;
@@ -241,19 +240,65 @@ layout::layout(const char* theme_file, Uint16 width, Uint16 height, int rotate):
    cfg_free(cfg);
 }
 
-layout::~layout()
+lemonui::~lemonui()
 {
-   SDL_FreeSurface(_bg);     // free background image
-   SDL_FreeSurface(_buffer); // free rendering buffer
+   if (_bg) // free background image
+      SDL_FreeSurface(_bg);
    
-   TTF_CloseFont(_title_font); // free fonts
-   TTF_CloseFont(_list_font);
+   if (_buffer) // free rendering buffer
+      SDL_FreeSurface(_buffer);
+   
+   if (_title_font && _list_font) { // free fonts
+      TTF_CloseFont(_title_font);
+      TTF_CloseFont(_list_font);
+   }
    
    if (_snap)  // free snapshot if there is one
       SDL_FreeSurface(_snap);
+   
+   TTF_Quit(); // shutdown ttf
+   SDL_Quit(); // shutdown sdl
 }
 
-void layout::snap(SDL_Surface* snap)
+void lemonui::setup_screen() throw(bad_lemon&)
+{
+   // initialize sdl
+   SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO | SDL_INIT_TIMER);
+           
+   // hide mouse cursor
+   SDL_ShowCursor(SDL_DISABLE);
+  
+   // enable key-repeat, use defaults delay and interval for now
+   SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, SDL_DEFAULT_REPEAT_INTERVAL);
+        
+   int bits = g_opts.get_int(KEY_SCREEN_BPP);
+   bool full = g_opts.get_bool(KEY_FULLSCREEN);
+   
+   log << info << "layout: using graphics mode: " <<
+         _scrnw <<'x'<< _scrnh <<'x'<< bits << endl;
+   
+   _screen = SDL_SetVideoMode(_scrnw, _scrnh, bits, SDL_SWSURFACE |
+         (full ? SDL_FULLSCREEN : 0));
+   
+   if (!_screen)
+      throw bad_lemon("layou: unable to open screen");
+   
+   /*
+    * Should I be using hardware surface?  Most docs/guides suggest no..
+    * I pass 0 as the alpha mask.  Surfaces don't need an alpha channel to
+    * do per-surface alpha and blitting.  In fact I can't seem to get the
+    * fadded snapshot blitting to work at all if the alpha channel is set!
+    */
+   _buffer = SDL_CreateRGBSurface(SDL_SWSURFACE,
+      _buffw, _buffh, 32, // w,h,bpp
+      0x000000ff, 0x0000ff00, 0x00ff0000, 0x00000000); // rgba masks, for big-endian
+
+   if (!_buffer)
+      throw bad_lemon("layout: unable to create drawing buffer");
+   
+}
+
+void lemonui::snap(SDL_Surface* snap)
 {
    if (_snap)
       SDL_FreeSurface(_snap);
@@ -261,16 +306,16 @@ void layout::snap(SDL_Surface* snap)
    _snap = snap;
 }
 
-void layout::parse_dimensions(SDL_Rect* rect, cfg_t* sec)
+void lemonui::parse_dimensions(SDL_Rect* rect, cfg_t* sec)
 {
    int w = cfg_getnint(sec, "dimensions", 0);
    int h = cfg_getnint(sec, "dimensions", 1);
    
-   rect->w = w != DIMENSION_FULL? w : _screen.w - rect->x;
-   rect->h = h != DIMENSION_FULL? h : _screen.h - rect->y;
+   rect->w = w != DIMENSION_FULL? w : _buffw - rect->x;
+   rect->h = h != DIMENSION_FULL? h : _buffh - rect->y;
 }
 
-void layout::normalize(const char* path, string& new_path)
+void lemonui::normalize(const char* path, string& new_path)
 {
    if (strlen(path) > 0 && path[0] != '/') {
       new_path.assign(_theme_dir);
@@ -280,7 +325,7 @@ void layout::normalize(const char* path, string& new_path)
    }
 }
 
-void layout::render_item(SDL_Surface* buffer, item* i, int yoff)
+void lemonui::render_item(SDL_Surface* buffer, item* i, int yoff)
 {
    SDL_Surface* surface = i->draw(_list_font, _list_color, _list_hover_color);
    
@@ -303,13 +348,13 @@ void layout::render_item(SDL_Surface* buffer, item* i, int yoff)
    SDL_FreeSurface(surface);
 }
 
-void layout::render(menu* current)
+void lemonui::render(menu* current)
 {
    // clear back buffer
    if (_bg == NULL)
-      SDL_FillRect(_buffer, &_screen, RGB(0,0,0));
+      SDL_FillRect(_buffer, NULL, RGB(0,0,0));
    else
-      SDL_BlitSurface(_bg, NULL, _buffer, &_screen);
+      SDL_BlitSurface(_bg, NULL, _buffer, NULL);
 
    // draw the games screen shot
    if (_snap) {
@@ -399,5 +444,15 @@ void layout::render(menu* current)
       render_item(_buffer, *i, yoff_bellow);
       
       yoff_bellow += _list_font_height + _list_item_spacing;
+   }
+   
+   if (_rotate != 0) {
+      SDL_Surface* tmp = rotozoomSurface(_buffer, _rotate, 1, 0);
+      SDL_BlitSurface(tmp, NULL, _screen, NULL);
+      SDL_UpdateRect(_screen, 0, 0, 0, 0);
+      SDL_FreeSurface(tmp);
+   } else {
+      SDL_BlitSurface(_buffer, NULL, _screen, NULL);
+      SDL_UpdateRect(_screen, 0, 0, 0, 0);
    }
 }

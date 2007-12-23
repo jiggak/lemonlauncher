@@ -17,14 +17,15 @@
  * along with Lemon Launcher; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-#ifndef LAYOUT_H_
-#define LAYOUT_H_
+#ifndef LEMONUI_H_
+#define LEMONUI_H_
 
-#include <confuse.h>
 #include <SDL/SDL.h>
 #include <SDL/SDL_ttf.h>
-#include "menu.h"
+#include <confuse.h>
 #include <string>
+#include "error.h"
+#include "menu.h"
 
 #define DIMENSION_FULL -1
 
@@ -35,12 +36,14 @@ typedef enum { left_justify, right_justify, center_justify } justify_t;
 /**
  * Class for handling layout and rendering of the interface
  */
-class layout {
+class lemonui {
 private:
    std::string _theme_dir;
    
    SDL_Surface* _bg;
-   SDL_Rect _screen;
+   SDL_Surface* _snap;
+   SDL_Surface* _buffer;
+   SDL_Surface* _screen;
    
    TTF_Font* _title_font;
    TTF_Font* _list_font;
@@ -58,11 +61,12 @@ private:
    justify_t _list_justify;
    int _page_size;
    
+   int _scrnw, _scrnh; // screen width/height
+   int _buffw, _buffh; // buffer width/height
+   int _rotate;
+   
    SDL_Rect _snap_rect;
    Uint8 _snap_alpha;
-   
-   SDL_Surface* _snap;
-   SDL_Surface* _buffer;
    
    /** Render menu item at the given verticle offset */
    void render_item(SDL_Surface* buffer, item* i, int yoff);
@@ -83,16 +87,19 @@ private:
    
 public:
    /**
-    * Creates the layout from the given skin file.  The layout uses
-    * the screen dimentions and rotation to calculate the dimensions of
-    * the rendering buffer.
+    * Creates the layout from the given theme file
     */
-   layout(const char* skin, Uint16 width, Uint16 height, int rotate);
+   lemonui(const char* theme_file);
    
    /**
     * Free resources (fonts, surfaces)
     */
-   ~layout();
+   ~lemonui();
+   
+   /**
+    * Setup screen and drawing buffer
+    */
+   void setup_screen() throw(bad_lemon&);
 
    /** Returns number of list items that fit in one page */
    const int page_size() const
@@ -102,12 +109,6 @@ public:
     * Sets the current snapshot image
     */
    void snap(SDL_Surface* snap);
-   
-   /**
-    * Returns a pointer to the rendering surface
-    */
-   SDL_Surface* buffer() const
-   { return _buffer; }
    
    /**
     * Render the layout for the current menu

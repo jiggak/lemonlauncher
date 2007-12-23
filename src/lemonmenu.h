@@ -23,7 +23,7 @@
 #include <SDL/SDL.h>
 #include <SDL/SDL_ttf.h>
 
-#include "layout.h"
+#include "lemonui.h"
 #include "menu.h"
 #include "options.h"
 #include "log.h"
@@ -32,10 +32,7 @@ namespace ll {
 
 class lemon_menu {
 private:
-   SDL_Surface* _screen;
-   SDL_TimerID  _snap_timer;
-   
-   layout* _layout;
+   lemonui* _layout;
 
    bool _running;
    bool _show_hidden;
@@ -43,8 +40,8 @@ private:
    menu* _top;
    menu* _current;
    
-   const int _rotate;
    const int _snap_delay;
+   SDL_TimerID  _snap_timer;
 
    void load_menus();
 
@@ -66,7 +63,7 @@ private:
    void handle_show_hide();
    
 public:
-   lemon_menu(SDL_Surface* screen);
+   lemon_menu(lemonui* ui);
    
    ~lemon_menu();
 

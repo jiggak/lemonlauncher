@@ -1,3 +1,7 @@
+ Dec 23/2007
+=======================
++ some code cleanup in preparation to use sqlite for the games list
+
  Dec 20/2007
 =======================
 + added a 'rotate' option for controlling the orientation of the interface

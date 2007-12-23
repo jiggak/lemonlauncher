@@ -45,26 +45,19 @@ Uint32 snap_timer_callback(Uint32 interval, void *param);
 bool cmp_item(item* left, item* right)
 { return strcmp(left->text(), right->text()) < 0; }
 
-lemon_menu::lemon_menu(SDL_Surface* screen) :
-   _screen(screen), _show_hidden(false), _snap_timer(0),
-   _snap_delay(g_opts.get_int(KEY_SNAPSHOT_DELAY)),
-   _rotate(g_opts.get_int(KEY_ROTATE))
+lemon_menu::lemon_menu(lemonui* ui) :
+   _show_hidden(false), _snap_timer(0),
+   _snap_delay(g_opts.get_int(KEY_SNAPSHOT_DELAY))
 {
-   _layout = new layout(
-         g_opts.get_string(KEY_SKIN_FILE),
-         g_opts.get_int(KEY_SCREEN_WIDTH),
-         g_opts.get_int(KEY_SCREEN_HEIGHT),
-         _rotate);
-
+   _layout = ui;
    load_menus();
 }
 
 lemon_menu::~lemon_menu()
 {
-   delete _layout;
    delete _top; // delete top menu will propigate to children
 }
-   
+
 void lemon_menu::load_menus()
 {
    cfg_opt_t game_opts[] = {
@@ -155,18 +148,7 @@ void lemon_menu::load_menus()
 
 void lemon_menu::render()
 {
-   // render ui
-   _layout->render(_current);
-
-   if (_rotate != 0) {
-      SDL_Surface* tmp = rotozoomSurface(_layout->buffer(), _rotate, 1, 0);
-      SDL_BlitSurface(tmp, NULL, _screen, NULL);
-      SDL_UpdateRect(_screen, 0, 0, 0, 0);
-      SDL_FreeSurface(tmp);
-   } else {
-      SDL_BlitSurface(_layout->buffer(), NULL, _screen, NULL);
-      SDL_UpdateRect(_screen, 0, 0, 0, 0);
-   }
+   _layout->render(_current);  // pass off rendering to layout class
 }
 
 void lemon_menu::main_loop()
@@ -313,10 +295,12 @@ void lemon_menu::handle_run()
 
    log << info << "handle_run: launching game " << g->text() << endl;
 
+   bool full = g_opts.get_bool(KEY_FULLSCREEN);
+   SDL_Surface* screen = SDL_GetVideoSurface();
+   
    // this is required when lemon launcher is full screen for some reason
    // otherwise mame freezes and all the processes have to be kill manually
-   bool full = g_opts.get_bool(KEY_FULLSCREEN);
-   if (full) SDL_WM_ToggleFullScreen(_screen);
+   if (full) SDL_WM_ToggleFullScreen(screen);
 
    size_t pos = cmd.find("%r");
    if (pos == string::npos)
@@ -328,7 +312,7 @@ void lemon_menu::handle_run()
 
    system(cmd.c_str());
 
-   if (full) SDL_WM_ToggleFullScreen(_screen);
+   if (full) SDL_WM_ToggleFullScreen(screen);
 
    // clear the event queue
    SDL_Event event;

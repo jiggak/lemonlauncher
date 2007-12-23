@@ -12,8 +12,8 @@ default_font.h: bin2c
 	$(srcdir)/bin2c default_font <$(DEFAULT_FONT) >default_font.h
 
 bin_PROGRAMS = lemonlauncher
-lemonlauncher_SOURCES = lemonlauncher.cpp lemonmenu.cpp layout.cpp \
+lemonlauncher_SOURCES = lemonlauncher.cpp lemonmenu.cpp lemonui.cpp \
 menu.cpp game.cpp options.cpp log.cpp
 
-noinst_HEADERS = lemonmenu.h options.h log.h error.h layout.h \
+noinst_HEADERS = lemonmenu.h options.h log.h error.h lemonui.h \
 item.h menu.h game.h
