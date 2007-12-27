@@ -408,42 +408,41 @@ void lemonui::render(menu* current)
    // finished with the title surface
    SDL_FreeSurface(title);
    
-   // if the menu doesn't have any children, just return now
-   if (!current->has_children())
-      return;
+   // only render list of children, if there is any
+   if (current->has_children()) {
+      int yoff = _list_rect.y + ((_list_rect.h - _list_font_height) / 2);
+      
+      // draw the selected item in the middle of the list region
+      render_item(_buffer, current->selected(), yoff);
    
-   int yoff = _list_rect.y + ((_list_rect.h - _list_font_height) / 2);
-   
-   // draw the selected item in the middle of the list region
-   render_item(_buffer, current->selected(), yoff);
-
-   // set absolute top/bottom of list area
-   int top = _list_rect.y;
-   int bottom = _list_rect.y + _list_rect.h;
-   
-   int yoff_above = yoff - _list_font_height - _list_item_spacing;
-   int yoff_bellow = yoff + _list_font_height + _list_item_spacing;
-   
-   vector<item*>::iterator i = current->selected_begin();
-   
-   // draw items above the selected item
-   if (i != current->first()) {
-      do {
-         --i;
+      // set absolute top/bottom of list area
+      int top = _list_rect.y;
+      int bottom = _list_rect.y + _list_rect.h;
+      
+      int yoff_above = yoff - _list_font_height - _list_item_spacing;
+      int yoff_bellow = yoff + _list_font_height + _list_item_spacing;
+      
+      vector<item*>::iterator i = current->selected_begin();
+      
+      // draw items above the selected item
+      if (i != current->first()) {
+         do {
+            --i;
+            
+            render_item(_buffer, *i, yoff_above);
+            yoff_above -= _list_font_height + _list_item_spacing;
+         } while (i != current->first() && yoff_above > top);
+      }
+      
+      // draw items bellow the selected item
+      i = current->selected_begin();
+      while (i+1 != current->last() && yoff_bellow + _list_font_height < bottom) {
+         i++;
          
-         render_item(_buffer, *i, yoff_above);
-         yoff_above -= _list_font_height + _list_item_spacing;
-      } while (i != current->first() && yoff_above > top);
-   }
-   
-   // draw items bellow the selected item
-   i = current->selected_begin();
-   while (i+1 != current->last() && yoff_bellow + _list_font_height < bottom) {
-      i++;
-      
-      render_item(_buffer, *i, yoff_bellow);
-      
-      yoff_bellow += _list_font_height + _list_item_spacing;
+         render_item(_buffer, *i, yoff_bellow);
+         
+         yoff_bellow += _list_font_height + _list_item_spacing;
+      }
    }
    
    if (_rotate != 0) {

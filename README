@@ -47,15 +47,13 @@ Controls
 +-------------+----------------+-----------------------------------------------+
 | pgup/pgdown | right/left     | Moves selection up/down by one page           |
 +-------------+----------------+-----------------------------------------------+
-| reload      | 5 (coin1)      | Reload menus from games.conf                  |
-+-------------+----------------+-----------------------------------------------+
-| showhide    | 6 (coin2)      | Toggle the display of hidden games/menus      |
-+-------------+----------------+-----------------------------------------------+
 | select      | 1 (p1-start)   | Open menu / launch game                       |
 +-------------+----------------+-----------------------------------------------+
 | back        | 2 (p2-start)   | Back to previous menu                         |
 +-------------+----------------+-----------------------------------------------+
 | alphamod(*) | lctrl (p1btn1) | Page up/down modifier key - alphabetic paging |
++-------------+----------------+-----------------------------------------------+
+| viewmod(*)  | lalt  (p1btn2) | Switch to next/previous view                  |
 +-------------+----------------+-----------------------------------------------+
 
 Default key mapping is based on the factory keycodes on the Ultimarc ipac and

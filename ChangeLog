@@ -1,8 +1,11 @@
  Dec 27/2007
 =======================
-+ added sqlite3 as a dependency
 + added 3 'view' states: favorites, most played, and genre view
++ lalt + left/right to switch views
++ removed toggle and reload keys... menu can be reloaded by switching views
++ added sqlite3 as a dependency
 + using sqlite database for games list
++ update counter in games db each time rom is played
 
  Dec 23/2007
 =======================

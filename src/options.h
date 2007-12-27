@@ -49,11 +49,10 @@ namespace ll {
 #define KEY_KEYCODE_DOWN      "down"
 #define KEY_KEYCODE_PGUP      "pgup"
 #define KEY_KEYCODE_PGDOWN    "pgdown"
-#define KEY_KEYCODE_RELOAD    "reload"
-#define KEY_KEYCODE_TOGGLE    "showhide"
 #define KEY_KEYCODE_SELECT    "select"
 #define KEY_KEYCODE_BACK      "back"
 #define KEY_KEYCODE_ALPHAMOD  "alphamod"
+#define KEY_KEYCODE_VIEWMOD   "viewmod"
 
 /**
  * Class for reading configuration file.  Settings are accessed by passing

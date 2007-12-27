@@ -22,6 +22,7 @@
 
 #include <SDL/SDL.h>
 #include <SDL/SDL_ttf.h>
+#include <sqlite3.h>
 
 #include "lemonui.h"
 #include "menu.h"
@@ -37,6 +38,7 @@ static char* view_names[] = {
 
 class lemon_menu {
 private:
+   sqlite3* _db;
    lemonui* _layout;
 
    bool _running;
@@ -61,11 +63,12 @@ private:
    void handle_pgdown();
    void handle_alphaup();
    void handle_alphadown();
+   void handle_viewup();
+   void handle_viewdown();
    void handle_run();
    void handle_up_menu();
    void handle_down_menu();
    void handle_activate();
-   void handle_show_hide();
    
 public:
    lemon_menu(lemonui* ui);

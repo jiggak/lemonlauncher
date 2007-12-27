@@ -51,9 +51,16 @@ bool cmp_item(item* left, item* right)
 { return strcmp(left->text(), right->text()) < 0; }
 
 lemon_menu::lemon_menu(lemonui* ui) :
-   _top(NULL), _current(NULL), _show_hidden(false), _snap_timer(0),
-   _snap_delay(g_opts.get_int(KEY_SNAPSHOT_DELAY))
+   _db(NULL), _top(NULL), _current(NULL), _show_hidden(false),
+   _snap_timer(0), _snap_delay(g_opts.get_int(KEY_SNAPSHOT_DELAY))
 {
+   // locate games.db file in confdir
+   string db_file("games.db");
+   g_opts.resolve(db_file);
+   
+   if (sqlite3_open(db_file.c_str(), &_db))
+      throw bad_lemon(sqlite3_errmsg(_db));
+   
    _layout = ui;
    change_view(genre);
 }
@@ -61,6 +68,9 @@ lemon_menu::lemon_menu(lemonui* ui) :
 lemon_menu::~lemon_menu()
 {
    delete _top; // delete top menu will propigate to children
+   
+   if (_db)
+      sqlite3_close(_db);
 }
 
 void lemon_menu::render()
@@ -80,11 +90,10 @@ void lemon_menu::main_loop()
    const int down_key = g_opts.get_int(KEY_KEYCODE_DOWN);
    const int pgup_key = g_opts.get_int(KEY_KEYCODE_PGUP);
    const int pgdown_key = g_opts.get_int(KEY_KEYCODE_PGDOWN);
-   const int reload_key = g_opts.get_int(KEY_KEYCODE_RELOAD);
-   const int toggle_key = g_opts.get_int(KEY_KEYCODE_TOGGLE);
    const int select_key = g_opts.get_int(KEY_KEYCODE_SELECT);
    const int back_key = g_opts.get_int(KEY_KEYCODE_BACK);
    const int alphamod = g_opts.get_int(KEY_KEYCODE_ALPHAMOD);
+   const int viewmod = g_opts.get_int(KEY_KEYCODE_VIEWMOD);
 
    _running = true;
    while (_running) {
@@ -106,12 +115,6 @@ void lemon_menu::main_loop()
             handle_activate();
          } else if (key == back_key) {
             handle_up_menu();
-         } else if (key == reload_key) {
-            //load_menus();
-            //TODO implement this
-            render();
-         } else if (key == toggle_key) {
-            handle_show_hide();
          }
 
          break;
@@ -120,14 +123,20 @@ void lemon_menu::main_loop()
             handle_up();
          } else if (key == down_key) {
             handle_down();
-         } else if (key == pgup_key && mod & alphamod) {
-            handle_alphadown();
-         } else if (key == pgdown_key && mod & alphamod) {
-            handle_alphaup();
          } else if (key == pgup_key) {
-            handle_pgup();
+            if (mod & alphamod)
+               handle_alphaup();
+            else if (mod & viewmod)
+               handle_viewup();
+            else
+               handle_pgup();
          } else if (key == pgdown_key) {
-            handle_pgdown();
+            if (mod & alphamod)
+               handle_alphadown();
+            else if (mod & viewmod)
+               handle_viewdown();
+            else
+               handle_pgdown();
          }
 
          break;
@@ -194,8 +203,27 @@ void lemon_menu::handle_alphadown()
    }
 }
 
+void lemon_menu::handle_viewup()
+{
+   if (_view != genre) {
+      change_view((view_t)(_view+1));
+      reset_snap_timer();
+      render();
+   }
+}
+
+void lemon_menu::handle_viewdown()
+{
+   if (_view != favorite) {
+      change_view((view_t)(_view-1));
+      reset_snap_timer();
+      render();
+   }
+}
+
 void lemon_menu::handle_activate()
 {
+   // ignore when this isn't any children
    if (!_current->has_children()) return;
 
    item* item = _current->selected();
@@ -228,13 +256,33 @@ void lemon_menu::handle_run()
 
    log << debug << "handle_run: " << cmd << endl;
 
-   system(cmd.c_str());
+   int exit_code = system(cmd.c_str());
 
    if (full) SDL_WM_ToggleFullScreen(screen);
 
    // clear the event queue
    SDL_Event event;
    while (SDL_PollEvent(&event));
+
+   // only increment the games play counter if emulator returned success
+   if (exit_code == 0) {
+      
+      // create query to update number of times game has been played
+      string query("UPDATE games SET count = count+1 WHERE rom = ");
+      query.append("'").append(g->rom()).append("'");
+   
+      char* error_msg = NULL;
+   
+      try {
+         // execute query and throw exception on error
+         if (sqlite3_exec(_db, query.c_str(), NULL, NULL, &error_msg)
+               != SQLITE_OK)
+            throw bad_lemon(error_msg);
+      } catch (...) {
+         sqlite3_free(error_msg);
+         throw;
+      }
+   }
 
    render();
 }
@@ -252,15 +300,6 @@ void lemon_menu::handle_down_menu()
 {
    _current = (menu*)_current->selected();
    reset_snap_timer();
-   render();
-}
-
-void lemon_menu::handle_show_hide()
-{
-   log << info << "handle_show_hide: changing hidden status" << endl;
-
-   _show_hidden = !_show_hidden;
-   change_view(genre);
    render();
 }
 
@@ -286,7 +325,7 @@ void lemon_menu::change_view(view_t view)
 {
    _view = view;
    
-   // free previous menu
+   // recurisvely free top menu / children
    if (_top != NULL)
       delete _top;
    
@@ -294,42 +333,43 @@ void lemon_menu::change_view(view_t view)
    _current = _top = new menu(view_names[_view]);
    
    string query("SELECT rom, name, params, genre FROM games");
+   string where, order;
    
    switch (_view) {
    case favorite:
-      query.append(" ORDER BY name");
-      query.append(" WHERE fav = 1");
+      order.append("name");
+      where.append("fav = 1");
       break;
       
    case most_played:
-      query.append(" ORDER BY count, name");
-      query.append(" WHERE count > 0");
+      order.append("count,name");
+      where.append("count > 0");
       break;
       
    case genre:
-      query.append(" GROUP BY genre");
-      query.append(" ORDER BY genre, name");
+      order.append("genre,name");
       break;
    }
    
-   string db_file("games.db");
-   g_opts.resolve(db_file);
+   if (!_show_hidden) {
+      if (where.length() != 0) where.append(" AND ");
+      where.append("hide = 0");
+   }
    
-   sqlite3 *db = NULL;
+   // assemble query
+   query.append(" WHERE ").append(where);
+   query.append(" ORDER BY ").append(order);
+   
+   log << debug << "change_view: " << query.c_str() << endl;
+   
    char* error_msg = NULL;
-   
+
    try {
-      if (sqlite3_open(db_file.c_str(), &db))
-         throw bad_lemon(sqlite3_errmsg(db));
-         //throw bad_lemon("can't open database " << sqlite3_errmsg(db) << endl;
-      
-      if (sqlite3_exec(db, query.c_str(), &sql_callback,
+      if (sqlite3_exec(_db, query.c_str(), &sql_callback,
             (void*)this, &error_msg) != SQLITE_OK)
          throw bad_lemon(error_msg);
-         //throw bad_lemon("sql error " << error_msg << endl;
    } catch (...) {
       sqlite3_free(error_msg);
-      sqlite3_close(db);
       throw;
    }
 }
@@ -349,15 +389,19 @@ int sql_callback(void* obj, int argc, char **argv, char **colname)
       break;
       
    case genre:
-      menu* m;
+      menu* m = NULL;
       if (!top->has_children()) {
          // if top menu doesn't have a menu yet, create one for the genre
          m = new menu(argv[3]);
          top->add_child(m);
       } else {
-         // otherwise use the last menu, and create a new one if necessary
-         m = (menu*)*top->last();
+         // get last child of the top level menu
+         vector<item*>::iterator i = top->last();
+         --i; // move iterator to the last item in list
          
+         m = (menu*)*i;
+         
+         // create new child menu of the genre strings don't match
          if (strcmp(m->text(), argv[3]) != 0) {
             m = new menu(argv[3]);
             top->add_child(m);
@@ -368,6 +412,8 @@ int sql_callback(void* obj, int argc, char **argv, char **colname)
       
       break;
    }
+   
+   return 0;
 }
 
 Uint32 snap_timer_callback(Uint32 interval, void *param)
