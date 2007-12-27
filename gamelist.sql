@@ -1,0 +1,9 @@
+CREATE TABLE games (
+   rom    TEXT PRIMARY KEY,
+   name   TEXT NOT NULL,
+   genre  TEXT NOT NULL,
+   params TEXT,
+   count  INTEGER NOT NULL DEFAULT 0,
+   fav    INTEGER NOT NULL DEFAULT 0,
+   hide   INTEGER NOT NULL DEFAULT 0
+);
