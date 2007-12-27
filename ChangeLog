@@ -1,3 +1,9 @@
+ Dec 27/2007
+=======================
++ added sqlite3 as a dependency
++ added 3 'view' states: favorites, most played, and genre view
++ using sqlite database for games list
+
  Dec 23/2007
 =======================
 + some code cleanup in preparation to use sqlite for the games list

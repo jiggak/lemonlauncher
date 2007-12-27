@@ -1,6 +1,6 @@
 AC_PREREQ(2.59)
 
-AC_INIT([Lemon Launcher], [0.0.6], [josh@slashdev.ca])
+AC_INIT([Lemon Launcher], [0.0.7], [josh@slashdev.ca])
 AC_CONFIG_AUX_DIR([config])
 AC_CONFIG_MACRO_DIR([m4])
 
@@ -52,6 +52,9 @@ AC_CHECK_LIB([SDL_gfx], [main], ,
 
 AC_CHECK_LIB([SDL_ttf], [main], ,
   [AC_MSG_ERROR([SDL_ttf library not found])])
+
+AC_CHECK_LIB([sqlite3], [main], ,
+  [AC_MSG_ERROR([sqlite3 library not found])])
 
 AC_CONFIG_FILES([Makefile src/Makefile])
 AC_OUTPUT

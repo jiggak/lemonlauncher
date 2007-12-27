@@ -38,7 +38,7 @@ private:
 
 public:
    game(const char* rom, const char* name, const char* params) :
-      _rom(rom), _name(name), _params(params) { }
+      _rom(rom), _name(name), _params(params != NULL? params : "") { }
 
    virtual ~game() { }
    

@@ -30,6 +30,11 @@
 
 namespace ll {
 
+typedef enum { favorite, most_played, genre } view_t;
+static char* view_names[] = {
+      "Favorites", "Most Played", "Genres"
+};
+
 class lemon_menu {
 private:
    lemonui* _layout;
@@ -39,16 +44,16 @@ private:
 
    menu* _top;
    menu* _current;
+   view_t _view;
    
    const int _snap_delay;
    SDL_TimerID  _snap_timer;
-
-   void load_menus();
 
    void render();
 
    void reset_snap_timer();
    void update_snap();
+   void change_view(view_t view);
 
    void handle_up();
    void handle_down();
@@ -68,6 +73,12 @@ public:
    ~lemon_menu();
 
    void main_loop();
+   
+   menu* top() const
+   { return _top; }
+   
+   const view_t view() const
+   { return _view; }
 };
 
 } // end namespace declaration

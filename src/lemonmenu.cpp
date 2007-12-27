@@ -23,7 +23,7 @@
 #include "error.h"
 
 #include <cstring>
-#include <confuse.h>
+#include <sqlite3.h>
 #include <sstream>
 #include <algorithm>
 #include <SDL/SDL_rotozoom.h>
@@ -34,9 +34,14 @@ using namespace ll;
 using namespace std;
 
 /**
- * Timer callback function
+ * Function executed after a timeout for finding snapshot images
  */
-Uint32 snap_timer_callback(Uint32 interval, void *param);
+static Uint32 snap_timer_callback(Uint32 interval, void *param);
+
+/**
+ * Function executed for each record returned from games list queries
+ */
+int sql_callback(void *obj, int argc, char **argv, char **colname);
 
 /**
  * Compares the text property of two item pointers and returns true if the left
@@ -46,104 +51,16 @@ bool cmp_item(item* left, item* right)
 { return strcmp(left->text(), right->text()) < 0; }
 
 lemon_menu::lemon_menu(lemonui* ui) :
-   _show_hidden(false), _snap_timer(0),
+   _top(NULL), _current(NULL), _show_hidden(false), _snap_timer(0),
    _snap_delay(g_opts.get_int(KEY_SNAPSHOT_DELAY))
 {
    _layout = ui;
-   load_menus();
+   change_view(genre);
 }
 
 lemon_menu::~lemon_menu()
 {
    delete _top; // delete top menu will propigate to children
-}
-
-void lemon_menu::load_menus()
-{
-   cfg_opt_t game_opts[] = {
-      CFG_STR("rom", 0, CFGF_NODEFAULT),
-      CFG_STR("title", 0, CFGF_NODEFAULT),
-      CFG_STR("params", "", CFGF_NONE),
-      CFG_END()
-   };
-
-   cfg_opt_t menu_opts[] = {
-      CFG_BOOL("sorted", cfg_true, CFGF_NONE),
-      CFG_SEC("game", game_opts, CFGF_MULTI),
-      CFG_END()
-   };
-
-   cfg_opt_t root_opts[] = {
-      CFG_SEC("menu", menu_opts, CFGF_TITLE | CFGF_MULTI),
-      CFG_END()
-   };
-
-   //cfg_opt_t opts[] = {
-   //   CFG_SEC("root", root_opts, CFGF_TITLE),
-   //   CFG_END()
-   //};
-
-   cfg_t* cfg = cfg_init(root_opts, CFGF_NONE);
-   
-   string cfg_file("games.conf");
-   g_opts.resolve(cfg_file);
-   
-   int result = cfg_parse(cfg, cfg_file.c_str());
-
-   if (result == CFG_FILE_ERROR) {
-      // file error usually means file not found, warn and load empty menu
-      log << warn << "load_menus: file error, using defaults" << endl;
-      cfg_parse_buf(cfg, "");
-   } else if (result == CFG_PARSE_ERROR) {
-      throw bad_lemon("load_menus: parse error");
-   }
-
-   // only one root supported for now, should be straight forward to support more
-   //cfg_t* root = cfg_getsec(cfg, "root");
-
-   //_top = new menu(cfg_title(root));
-   _top = new menu("Arcade Games");
-
-   // iterate over menu sections
-   int menu_cnt = cfg_size(cfg, "menu");
-   for (int i=0; i<menu_cnt; i++) {
-      cfg_t* m = cfg_getnsec(cfg, "menu", i);
-
-      const char* mtitle = cfg_title(m);
-      bool sorted = cfg_getbool(m, "sorted") == cfg_true;
-
-      // "should" be safe to assume title is at least one charcter long
-      if (mtitle[0] != '.' || _show_hidden) {
-
-         // create menu and add to root menu
-         menu* pmenu = new menu(mtitle);
-         _top->add_child(pmenu);
-
-         // iterate over the game sections
-         int game_cnt = cfg_size(m, "game");
-         for (int j=0; j<game_cnt; j++) {
-            cfg_t* g = cfg_getnsec(m, "game", j);
-
-            char* rom = cfg_getstr(g, "rom");
-            char* title = cfg_getstr(g, "title");
-            char* params = cfg_getstr(g, "params");
-
-            if (title[0] != '.' || _show_hidden)
-               pmenu->add_child(new game(rom, title, params));
-         }
-
-         // sort the menu alphabeticly using game/item name
-         if (sorted)
-            sort(pmenu->first(), pmenu->last(), cmp_item);
-      }
-   }
-
-   // always sort top menu
-   sort(_top->first(), _top->last(), cmp_item);
-
-   _current = _top;
-
-   cfg_free(cfg);
 }
 
 void lemon_menu::render()
@@ -190,7 +107,8 @@ void lemon_menu::main_loop()
          } else if (key == back_key) {
             handle_up_menu();
          } else if (key == reload_key) {
-            load_menus();
+            //load_menus();
+            //TODO implement this
             render();
          } else if (key == toggle_key) {
             handle_show_hide();
@@ -342,7 +260,7 @@ void lemon_menu::handle_show_hide()
    log << info << "handle_show_hide: changing hidden status" << endl;
 
    _show_hidden = !_show_hidden;
-   load_menus();
+   change_view(genre);
    render();
 }
 
@@ -362,6 +280,94 @@ void lemon_menu::reset_snap_timer()
 
    // schedule timer to run in 500 milliseconds
    _snap_timer = SDL_AddTimer(_snap_delay, snap_timer_callback, NULL);
+}
+
+void lemon_menu::change_view(view_t view)
+{
+   _view = view;
+   
+   // free previous menu
+   if (_top != NULL)
+      delete _top;
+   
+   // create new top menu
+   _current = _top = new menu(view_names[_view]);
+   
+   string query("SELECT rom, name, params, genre FROM games");
+   
+   switch (_view) {
+   case favorite:
+      query.append(" ORDER BY name");
+      query.append(" WHERE fav = 1");
+      break;
+      
+   case most_played:
+      query.append(" ORDER BY count, name");
+      query.append(" WHERE count > 0");
+      break;
+      
+   case genre:
+      query.append(" GROUP BY genre");
+      query.append(" ORDER BY genre, name");
+      break;
+   }
+   
+   string db_file("games.db");
+   g_opts.resolve(db_file);
+   
+   sqlite3 *db = NULL;
+   char* error_msg = NULL;
+   
+   try {
+      if (sqlite3_open(db_file.c_str(), &db))
+         throw bad_lemon(sqlite3_errmsg(db));
+         //throw bad_lemon("can't open database " << sqlite3_errmsg(db) << endl;
+      
+      if (sqlite3_exec(db, query.c_str(), &sql_callback,
+            (void*)this, &error_msg) != SQLITE_OK)
+         throw bad_lemon(error_msg);
+         //throw bad_lemon("sql error " << error_msg << endl;
+   } catch (...) {
+      sqlite3_free(error_msg);
+      sqlite3_close(db);
+      throw;
+   }
+}
+
+int sql_callback(void* obj, int argc, char **argv, char **colname)
+{
+   lemon_menu* lm = (lemon_menu*)obj;
+   menu* top = lm->top();
+   
+   game* g = new game(argv[0], argv[1], argv[2]);
+   
+   switch (lm->view()) {
+   case favorite:
+   case most_played:
+      top->add_child(g);
+      
+      break;
+      
+   case genre:
+      menu* m;
+      if (!top->has_children()) {
+         // if top menu doesn't have a menu yet, create one for the genre
+         m = new menu(argv[3]);
+         top->add_child(m);
+      } else {
+         // otherwise use the last menu, and create a new one if necessary
+         m = (menu*)*top->last();
+         
+         if (strcmp(m->text(), argv[3]) != 0) {
+            m = new menu(argv[3]);
+            top->add_child(m);
+         }
+      }
+      
+      m->add_child(g);
+      
+      break;
+   }
 }
 
 Uint32 snap_timer_callback(Uint32 interval, void *param)
