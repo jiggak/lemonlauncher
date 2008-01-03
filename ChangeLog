@@ -1,9 +1,9 @@
  Jan 03/2008
 =======================
-+ using new thread to launch game.
-  this lets the main loop of lemon launcher continue to run and removes the
-  need for queue flushing and screen minimizing.
++ create separate thread to launch mame which eliminates the event queue
+  flushing and special minimize/maximize handling on Linux
 + made favorite view the default view
++ added patch to restore lemon launcher on win32 when mame exits
 
  Dec 27/2007
 =======================

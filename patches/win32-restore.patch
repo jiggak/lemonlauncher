@@ -1,0 +1,35 @@
+Index: src/lemonmenu.cpp
+===================================================================
+--- src/lemonmenu.cpp	(revision 50)
++++ src/lemonmenu.cpp	(working copy)
+@@ -28,6 +28,8 @@
+ #include <algorithm>
+ #include <SDL/SDL_rotozoom.h>
+ #include <SDL/SDL_thread.h>
++#include <SDL/SDL_syswm.h>
++#include <windows.h>
+ 
+ #define UPDATE_SNAP_EVENT 1
+ 
+@@ -347,8 +349,20 @@
+    cmd.replace(pos, 2, rom);
+    ll::log << debug << "handle_run: " << cmd << endl;
+ 
++   // minimize our window
++   SDL_WM_IconifyWindow();
++   
++   // launch the emulator
+    int exit_code = system(cmd.c_str());
+-
++   
++   // get window information for doing windows specific stuff
++   SDL_SysWMinfo info;
++   SDL_GetWMInfo(&info);
++   
++   // open our iconified window and set it as foreground
++   OpenIcon(info.window);
++   SetForegroundWindow(info.window);
++   
+    // only increment the games play counter if emulator returned success
+    if (exit_code == 0) {
+       

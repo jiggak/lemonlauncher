@@ -36,6 +36,19 @@ directory path to the configure script (--with-confdir).
 See ./configure --help for a complete list of build time options.
 
 
+Windows
+=======
+
+I have been developing and testing Lemon Launcher on windows so as a result
+there are some outstanding issues on windows.
+
+* bug: when mame exits, lemon launcher is minimized
+  -> patch source code and rebuild
+     lemonlauncher# patch -p0 <patches/win32-restore.patch
+* bug: when default font is used, lemonlauncher crashes
+  -> no fix yet, always make sure theme.conf contains valid path to font file
+
+
 Controls
 ========
 
