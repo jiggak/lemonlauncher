@@ -27,6 +27,7 @@
 #include <sstream>
 #include <algorithm>
 #include <SDL/SDL_rotozoom.h>
+#include <SDL/SDL_thread.h>
 
 #define UPDATE_SNAP_EVENT 1
 
@@ -42,6 +43,11 @@ static Uint32 snap_timer_callback(Uint32 interval, void *param);
  * Function executed for each record returned from games list queries
  */
 int sql_callback(void *obj, int argc, char **argv, char **colname);
+
+/**
+ * Asyncronous function for launching a game
+ */
+int launch_game(void* data);
 
 /**
  * Compares the text property of two item pointers and returns true if the left
@@ -62,7 +68,7 @@ lemon_menu::lemon_menu(lemonui* ui) :
       throw bad_lemon(sqlite3_errmsg(_db));
    
    _layout = ui;
-   change_view(genre);
+   change_view(favorite);
 }
 
 lemon_menu::~lemon_menu()
@@ -237,54 +243,9 @@ void lemon_menu::handle_activate()
 void lemon_menu::handle_run()
 {
    game* g = (game*)_current->selected();
-   string cmd(g_opts.get_string(KEY_MAME_PATH));
-
    log << info << "handle_run: launching game " << g->text() << endl;
-
-   bool full = g_opts.get_bool(KEY_FULLSCREEN);
-   SDL_Surface* screen = SDL_GetVideoSurface();
    
-   // this is required when lemon launcher is full screen for some reason
-   // otherwise mame freezes and all the processes have to be kill manually
-   if (full) SDL_WM_ToggleFullScreen(screen);
-
-   size_t pos = cmd.find("%r");
-   if (pos == string::npos)
-      throw bad_lemon("mame path missing %r specifier");
-
-   cmd.replace(pos, 2, g->rom());
-
-   log << debug << "handle_run: " << cmd << endl;
-
-   int exit_code = system(cmd.c_str());
-
-   if (full) SDL_WM_ToggleFullScreen(screen);
-
-   // clear the event queue
-   SDL_Event event;
-   while (SDL_PollEvent(&event));
-
-   // only increment the games play counter if emulator returned success
-   if (exit_code == 0) {
-      
-      // create query to update number of times game has been played
-      string query("UPDATE games SET count = count+1 WHERE rom = ");
-      query.append("'").append(g->rom()).append("'");
-   
-      char* error_msg = NULL;
-   
-      try {
-         // execute query and throw exception on error
-         if (sqlite3_exec(_db, query.c_str(), NULL, NULL, &error_msg)
-               != SQLITE_OK)
-            throw bad_lemon(error_msg);
-      } catch (...) {
-         sqlite3_free(error_msg);
-         throw;
-      }
-   }
-
-   render();
+   SDL_CreateThread(&launch_game, (void*)g->rom());
 }
 
 void lemon_menu::handle_up_menu()
@@ -372,6 +333,54 @@ void lemon_menu::change_view(view_t view)
       sqlite3_free(error_msg);
       throw;
    }
+}
+
+int launch_game(void* data)
+{
+   char* rom = (char*)data;
+   
+   string cmd(g_opts.get_string(KEY_MAME_PATH));
+   size_t pos = cmd.find("%r");
+   if (pos == string::npos)
+      throw bad_lemon("mame path missing %r specifier");
+
+   cmd.replace(pos, 2, rom);
+   ll::log << debug << "handle_run: " << cmd << endl;
+
+   int exit_code = system(cmd.c_str());
+
+   // only increment the games play counter if emulator returned success
+   if (exit_code == 0) {
+      
+      // locate games.db file in confdir
+      string db_file("games.db");
+      g_opts.resolve(db_file);
+   
+      // create query to update number of times game has been played
+      string query("UPDATE games SET count = count+1 WHERE rom = ");
+      query.append("'").append(rom).append("'");
+   
+      sqlite3* db = NULL;
+      char* error_msg = NULL;
+   
+      try {
+         if (sqlite3_open(db_file.c_str(), &db))
+            throw bad_lemon(sqlite3_errmsg(db));
+         
+         // execute query and throw exception on error
+         if (sqlite3_exec(db, query.c_str(), NULL, NULL, &error_msg)
+               != SQLITE_OK)
+            throw bad_lemon(error_msg);
+      } catch (...) {
+         sqlite3_free(error_msg);
+         throw;
+      }
+      
+      if (db)
+         sqlite3_close(db);
+   }
+   
+   return exit_code;
 }
 
 int sql_callback(void* obj, int argc, char **argv, char **colname)
