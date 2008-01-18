@@ -29,6 +29,11 @@
 #include <SDL/SDL_rotozoom.h>
 #include <SDL/SDL_thread.h>
 
+#ifdef __WIN32__
+/* needed for special handling in launch_game function */
+#include <windows.h>
+#endif
+
 #define UPDATE_SNAP_EVENT 1
 
 using namespace ll;
@@ -347,8 +352,44 @@ int launch_game(void* data)
    cmd.replace(pos, 2, rom);
    ll::log << debug << "handle_run: " << cmd << endl;
 
+   // intriquicies on different platforms when launching mame
+   // Linux: when in full screen mode, lemon launcher must be in windowed mode
+   //        before launching mame
+   // Windows: when mame is launcher, lemon launcher is minimized to task bar
+   //          and must be explicitely restored
+
+#ifdef __WIN32__
+   // get handle of forground window
+   HWND hw = GetForegroundWindow();
+   
+   int exit_code = system(cmd.c_str());
+   
+   // open iconified window and set it as foreground
+   OpenIcon(hw);
+   SetForegroundWindow(hw);
+   
+#elif __LINUX__
+   SDL_Surface* screen = SDL_GetVideoSurface();
+   
+   bool toggled = false;
+   
+   // if full screen, switch to windowed mode (and set flag)
+   if (screen->flags & SDL_FULLSCREEN) {
+      SDL_WM_ToggleFullScreen(screen);
+      toggled = true;
+   }
+   
    int exit_code = system(cmd.c_str());
 
+   if (toggled) // switch back to full screen if window mode was toggled
+      SDL_WM_ToggleFullScreen(screen);
+   
+#else /* all other OS's */
+   // launch mame and hope for the best
+   int exit_code = system(cmd.c_str());
+   
+#endif
+   
    // only increment the games play counter if emulator returned success
    if (exit_code == 0) {
       

@@ -1,3 +1,9 @@
+2008-01-18 Josh Kropf <josh@slashdev.ca>
+
+	* lemonmenu.cpp (launch_game):
+	Platform specific handing (windows, linux) of window when launching mame.
+
+
  Jan 03/2008
 =======================
 + create separate thread to launch mame which eliminates the event queue
