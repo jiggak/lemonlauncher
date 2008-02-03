@@ -1,7 +1,18 @@
+2008-02-03 Mike Frysinger <vapier@users.sourceforge.net>
+
+	* configure.in: setup BUILD_CC env var which looks for gcc and then
+	cc.
+	* Makefile.am: declare ACLOCAL_AMFLAGS so automatic autotool
+	generation knows how to properly execute aclocal.
+	* src/Makefile.am: build bin2c with BUILD_CC rather than CC.
+	fix bug where if bin2c fails default_font.h would still be created and
+	contain garbage.
+
 2008-01-18 Josh Kropf <josh@slashdev.ca>
 
 	* lemonmenu.cpp (launch_game):
-	Platform specific handing (windows, linux) of window when launching mame.
+	Platform specific handing (windows, linux) of window when launching
+	mame.
 
 
  Jan 03/2008

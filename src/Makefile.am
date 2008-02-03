@@ -8,8 +8,12 @@ bin2c_SOURCES = bin2c.c
 BUILT_SOURCES = default_font.h
 CLEANFILES = default_font.h
 
+bin2c: bin2c.c
+	$(BUILD_CC) -o $@ $< $(BUILD_CFLAGS)
+
 default_font.h: bin2c
-	./bin2c default_font <$(DEFAULT_FONT) >default_font.h
+	./bin2c default_font <$(DEFAULT_FONT) > $@.tmp
+	mv $@.tmp $@
 
 bin_PROGRAMS = lemonlauncher
 lemonlauncher_SOURCES = lemonlauncher.cpp lemonmenu.cpp lemonui.cpp \
