@@ -245,9 +245,6 @@ lemonui::~lemonui()
    if (_bg) // free background image
       SDL_FreeSurface(_bg);
    
-   if (_buffer) // free rendering buffer
-      SDL_FreeSurface(_buffer);
-   
    if (_title_font && _list_font) { // free fonts
       TTF_CloseFont(_title_font);
       TTF_CloseFont(_list_font);
@@ -257,7 +254,8 @@ lemonui::~lemonui()
       SDL_FreeSurface(_snap);
    
    TTF_Quit(); // shutdown ttf
-   SDL_Quit(); // shutdown sdl
+   
+   destroy_screen();
 }
 
 void lemonui::setup_screen() throw(bad_lemon&)
@@ -296,6 +294,16 @@ void lemonui::setup_screen() throw(bad_lemon&)
    if (!_buffer)
       throw bad_lemon("layout: unable to create drawing buffer");
    
+}
+
+void lemonui::destroy_screen()
+{
+   if (_buffer) { // free rendering buffer
+      SDL_FreeSurface(_buffer);
+      _buffer = NULL;
+   }
+      
+   SDL_Quit(); // shutdown sdl
 }
 
 void lemonui::snap(SDL_Surface* snap)

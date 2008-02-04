@@ -100,6 +100,11 @@ public:
     * Setup screen and drawing buffer
     */
    void setup_screen() throw(bad_lemon&);
+   
+   /**
+    * Destroy screen and drawing buffer
+    */
+   void destroy_screen();
 
    /** Returns number of list items that fit in one page */
    const int page_size() const

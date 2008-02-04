@@ -27,7 +27,6 @@
 #include <sstream>
 #include <algorithm>
 #include <SDL/SDL_rotozoom.h>
-#include <SDL/SDL_thread.h>
 
 #ifdef __WIN32__
 /* needed for special handling in launch_game function */
@@ -138,14 +137,14 @@ void lemon_menu::main_loop()
             if (mod & alphamod)
                handle_alphaup();
             else if (mod & viewmod)
-               handle_viewup();
+               handle_viewdown();
             else
                handle_pgup();
          } else if (key == pgdown_key) {
             if (mod & alphamod)
                handle_alphadown();
             else if (mod & viewmod)
-               handle_viewdown();
+               handle_viewup();
             else
                handle_pgdown();
          }
@@ -250,7 +249,76 @@ void lemon_menu::handle_run()
    game* g = (game*)_current->selected();
    log << info << "handle_run: launching game " << g->text() << endl;
    
-   SDL_CreateThread(&launch_game, (void*)g->rom());
+   string cmd(g_opts.get_string(KEY_MAME_PATH));
+   size_t pos = cmd.find("%r");
+   if (pos == string::npos)
+      throw bad_lemon("mame path missing %r specifier");
+
+   cmd.replace(pos, 2, g->rom());
+   ll::log << debug << "handle_run: " << cmd << endl;
+
+   // This bit of code here has been a big pain.  On linux in full screen (X11)
+   // lemon launcher has to be minimized before launching mame or else things
+   // tend to lock up.  On windows lemon launcher is automagically minimized
+   // and must be explicitly foregrounded after mame exits.  And on Mac OS X
+   // sdlmame complains it can't open the screen.
+   //
+   // That said, I think I have it sorted.  Simply destroying lemon launchers
+   // screen and then re-creating it after mame exits seems to get rid of the
+   // irregularities.
+
+#ifdef __WIN32__
+   // get handle of forground window
+   HWND hw = GetForegroundWindow();
+   
+   int exit_code = system(cmd.c_str());
+   
+   // open iconified window and set it as foreground
+   OpenIcon(hw);
+   SetForegroundWindow(hw);
+   
+#else /* all other OS's */
+   // destroy buffers and screen
+   _layout->destroy_screen();
+   
+   // launch mame and hope for the best
+   int exit_code = system(cmd.c_str());
+   
+   // create screen and render
+   _layout->setup_screen();
+   render();
+#endif
+   
+   // only increment the games play counter if emulator returned success
+   if (exit_code == 0) {
+      
+      // locate games.db file in confdir
+      string db_file("games.db");
+      g_opts.resolve(db_file);
+   
+      // create query to update number of times game has been played
+      string query("UPDATE games SET count = count+1 WHERE rom = ");
+      query.append("'").append(g->rom()).append("'");
+   
+      sqlite3* db = NULL;
+      char* error_msg = NULL;
+   
+      try {
+         if (sqlite3_open(db_file.c_str(), &db))
+            throw bad_lemon(sqlite3_errmsg(db));
+         
+         // execute query and throw exception on error
+         if (sqlite3_exec(db, query.c_str(), NULL, NULL, &error_msg)
+               != SQLITE_OK)
+            throw bad_lemon(error_msg);
+      } catch (...) {
+         sqlite3_free(error_msg);
+         throw;
+      }
+      
+      if (db)
+         sqlite3_close(db);
+   }
 }
 
 void lemon_menu::handle_up_menu()
@@ -338,90 +406,6 @@ void lemon_menu::change_view(view_t view)
       sqlite3_free(error_msg);
       throw;
    }
-}
-
-int launch_game(void* data)
-{
-   char* rom = (char*)data;
-   
-   string cmd(g_opts.get_string(KEY_MAME_PATH));
-   size_t pos = cmd.find("%r");
-   if (pos == string::npos)
-      throw bad_lemon("mame path missing %r specifier");
-
-   cmd.replace(pos, 2, rom);
-   ll::log << debug << "handle_run: " << cmd << endl;
-
-   // intriquicies on different platforms when launching mame
-   // Linux: when in full screen mode, lemon launcher must be in windowed mode
-   //        before launching mame
-   // Windows: when mame is launcher, lemon launcher is minimized to task bar
-   //          and must be explicitely restored
-
-#ifdef __WIN32__
-   // get handle of forground window
-   HWND hw = GetForegroundWindow();
-   
-   int exit_code = system(cmd.c_str());
-   
-   // open iconified window and set it as foreground
-   OpenIcon(hw);
-   SetForegroundWindow(hw);
-   
-#elif __LINUX__
-   SDL_Surface* screen = SDL_GetVideoSurface();
-   
-   bool toggled = false;
-   
-   // if full screen, switch to windowed mode (and set flag)
-   if (screen->flags & SDL_FULLSCREEN) {
-      SDL_WM_ToggleFullScreen(screen);
-      toggled = true;
-   }
-   
-   int exit_code = system(cmd.c_str());
-
-   if (toggled) // switch back to full screen if window mode was toggled
-      SDL_WM_ToggleFullScreen(screen);
-   
-#else /* all other OS's */
-   // launch mame and hope for the best
-   int exit_code = system(cmd.c_str());
-   
-#endif
-   
-   // only increment the games play counter if emulator returned success
-   if (exit_code == 0) {
-      
-      // locate games.db file in confdir
-      string db_file("games.db");
-      g_opts.resolve(db_file);
-   
-      // create query to update number of times game has been played
-      string query("UPDATE games SET count = count+1 WHERE rom = ");
-      query.append("'").append(rom).append("'");
-   
-      sqlite3* db = NULL;
-      char* error_msg = NULL;
-   
-      try {
-         if (sqlite3_open(db_file.c_str(), &db))
-            throw bad_lemon(sqlite3_errmsg(db));
-         
-         // execute query and throw exception on error
-         if (sqlite3_exec(db, query.c_str(), NULL, NULL, &error_msg)
-               != SQLITE_OK)
-            throw bad_lemon(error_msg);
-      } catch (...) {
-         sqlite3_free(error_msg);
-         throw;
-      }
-      
-      if (db)
-         sqlite3_close(db);
-   }
-   
-   return exit_code;
 }
 
 int sql_callback(void* obj, int argc, char **argv, char **colname)

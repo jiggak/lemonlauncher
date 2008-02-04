@@ -1,3 +1,20 @@
+  February 3 2008
+===========================================
+I think I have finally sorted out the silliness when launching mame.  So far
+this latest update seems portable between Linux and OS X.  I have yet to test
+on a box with Framebuffer and Windows but I will do that soon.  I also swapped
+the keys for changing the current view since it seems more natural this way.
+
+I guess I should mention that this version has some significant changes over
+version 0.0.6.  I opted for an sqlite database for the games list instead of
+the static text file which made it easy to setup a favorites list, most
+played list, and of course the genre view.
+
+So now I'm trying to figure out the best way to visually represent that there
+are multiple views available and some sort of visual feedback of the the current
+view.  See the README for key mapping.
+
+
   December 20 2007
 ===========================================
 Today I'm going to release 0.0.6.  This release has only a few minor changes

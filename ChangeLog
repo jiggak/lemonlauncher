@@ -1,3 +1,15 @@
+2008-02-03 Josh Kropf <josh@slashdev.ca>
+
+	* lemonmenu.cpp (main_loop): fixed backward mapping of view change
+	keys (use left-arrow to move left and right-arrow for right).
+	(handle_run): moved game launching logic back into this method instead
+	of using sdl threads.
+	(launch_game): removed function.
+	* lemonui.h (destroy_screen): new public method for destroying screen.
+	* lemonui.cpp (~lemonui): moved screen and double buffer destruction
+	to a new method.
+	(destroy_screen): new method for destroying screen and double buffer.
+
 2008-02-03 Mike Frysinger <vapier@users.sourceforge.net>
 
 	* configure.in: setup BUILD_CC env var which looks for gcc and then
