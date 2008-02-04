@@ -9,6 +9,7 @@
 	* lemonui.cpp (~lemonui): moved screen and double buffer destruction
 	to a new method.
 	(destroy_screen): new method for destroying screen and double buffer.
+	* lemonmenu.cpp (handle_run): removed win32 specific handling.
 
 2008-02-03 Mike Frysinger <vapier@users.sourceforge.net>
 

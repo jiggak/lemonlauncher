@@ -28,11 +28,6 @@
 #include <algorithm>
 #include <SDL/SDL_rotozoom.h>
 
-#ifdef __WIN32__
-/* needed for special handling in launch_game function */
-#include <windows.h>
-#endif
-
 #define UPDATE_SNAP_EVENT 1
 
 using namespace ll;
@@ -265,19 +260,8 @@ void lemon_menu::handle_run()
    //
    // That said, I think I have it sorted.  Simply destroying lemon launchers
    // screen and then re-creating it after mame exits seems to get rid of the
-   // irregularities.
+   // irregularities.  Even on Windows!
 
-#ifdef __WIN32__
-   // get handle of forground window
-   HWND hw = GetForegroundWindow();
-   
-   int exit_code = system(cmd.c_str());
-   
-   // open iconified window and set it as foreground
-   OpenIcon(hw);
-   SetForegroundWindow(hw);
-   
-#else /* all other OS's */
    // destroy buffers and screen
    _layout->destroy_screen();
    
@@ -287,7 +271,6 @@ void lemon_menu::handle_run()
    // create screen and render
    _layout->setup_screen();
    render();
-#endif
    
    // only increment the games play counter if emulator returned success
    if (exit_code == 0) {
