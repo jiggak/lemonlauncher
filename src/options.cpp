@@ -20,6 +20,7 @@
 #include "options.h"
 #include "error.h"
 
+#include <cstring>
 #include <string>
 #include <iostream>
 

@@ -1,0 +1,113 @@
+#!/usr/bin/env python
+
+import sys
+import os
+import glob
+import zipfile
+import optparse
+try:
+    # this is wayyyyy faster than the other options . . .
+    from lxml.etree import ElementTree
+except ImportError:
+    try:
+        # if the user has python 2.5
+        from xml.etree.ElementTree import ElementTree
+    except ImportError:
+        try:
+            from etree.ElementTree import ElementTree
+        except ImportError:
+            print "Go get the an Element Tree package! (try python-lxml)"
+            sys.exit()
+
+import config
+import model
+
+# Deal with the command line settings
+p = optparse.OptionParser()
+p.add_option('-r', '--romdir', default=os.path.expanduser('~/Games/mame/roms'))
+p.add_option('-g', '--gamelist', default='mame.xml')
+p.add_option('-c', '--catlist', default='Catver.ini')
+options, args = p.parse_args()
+ROM_DIR = options.romdir
+GAMELIST = options.gamelist
+
+rom_files = glob.glob(os.path.join(ROM_DIR, '*.zip'))
+if len(rom_files) == 0:
+    print 'Rom folder has not zip files, exiting'
+    sys.exit()
+rom_names = [os.path.basename(file) for file in rom_files]
+mame_info = ElementTree(file=GAMELIST)
+
+# Setup the catagory dictionary
+catlist = open(options.catlist)
+game_genre = {}
+for game in catlist:
+    name, catagory = game.strip().split('=')
+    game_genre[name] = catagory
+catlist.close()
+
+for rom in mame_info.findall('.//game'):
+    rom_name = rom.get('name') + '.zip'
+    if rom.get('cloneof'):
+        cloneof = rom.get('cloneof') + '.zip'
+    else:
+        cloneof = None
+    if rom.get('romof'):
+        romof = rom.get('romof') + '.zip'
+    else:
+        romof = None
+
+    # Set the default behaviour for the database, this will be changed
+    # in the following code depending on the searches.
+    missing_rom = False
+    broken_rom = False
+    if rom_name in rom_names:
+        zip_info = zipfile.ZipFile(os.path.join(ROM_DIR, rom_name), 'r')
+        zip_files = zip_info.namelist()
+        if cloneof is not None and cloneof in rom_names:
+            zip_info = zipfile.ZipFile(os.path.join(ROM_DIR, cloneof), 'r')
+            zip_files.extend(zip_info.namelist())
+        if romof is not None and romof in rom_names:
+            zip_info = zipfile.ZipFile(os.path.join(ROM_DIR, romof), 'r')
+            zip_files.extend(zip_info.namelist())
+        game_files = [file.get('name') for file in rom.findall('.//rom')]
+        #TODO: the xml file also contains the md5 hases of each of the files, which
+        # I will ultimately want to check against what I have to ensure they are the
+        # correct files.
+        for game_file in game_files:
+            if game_file in zip_files:
+                pass
+            else:
+                broken_rom = True
+                print "%s is missing: %s" % (rom_name, game_file)
+    else:
+        missing_rom = True
+        print 'Missing: ', rom_name
+
+    # Add the Rom to the database
+    the_rom = model.Rom(rom_name)
+    #TODO: this is ugly, I should write a function that either
+    # returns the string if it is not None, otherwise returns None.
+    # or instead of None (which become NULL) maybe it should be 'Unknown' which
+    # is more accurate?
+    try:
+        the_rom.manufacturer = rom.find('manufacturer').text
+    except AttributeError:
+        the_rom.manufacturer = 'Unknown'
+    try:
+        the_rom.year = int(rom.find('year').text)
+    except AttributeError:
+        the_rom.year = 0
+    try:
+        the_rom.name = rom.find('description').text
+    except:
+        the_rom.name = 'Unknown'
+
+    the_rom.genre = game_genre[os.path.splitext(rom_name)[0]]
+    if not missing_rom:
+        the_rom.missing = False
+    if broken_rom:
+        the_rom.broken = True
+
+    model.session.save(the_rom)
+model.session.commit()

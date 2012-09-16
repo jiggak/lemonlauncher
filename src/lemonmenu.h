@@ -32,7 +32,7 @@
 namespace ll {
 
 typedef enum { favorite, most_played, genre } view_t;
-static char* view_names[] = {
+static const char* view_names[] = {
       "Favorites", "Most Played", "Genres"
 };
 

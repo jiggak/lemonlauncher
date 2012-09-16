@@ -26,6 +26,7 @@
 #include <sqlite3.h>
 #include <sstream>
 #include <algorithm>
+#include <typeinfo>
 #include <SDL/SDL_rotozoom.h>
 
 #define UPDATE_SNAP_EVENT 1
@@ -280,7 +281,7 @@ void lemon_menu::handle_run()
       g_opts.resolve(db_file);
    
       // create query to update number of times game has been played
-      string query("UPDATE games SET count = count+1 WHERE rom = ");
+      string query("UPDATE games SET count = count+1 WHERE filename = ");
       query.append("'").append(g->rom()).append("'");
    
       sqlite3* db = NULL;
@@ -349,13 +350,13 @@ void lemon_menu::change_view(view_t view)
    // create new top menu
    _current = _top = new menu(view_names[_view]);
    
-   string query("SELECT rom, name, params, genre FROM games");
+   string query("SELECT filename, name, params, genre FROM games");
    string where, order;
    
    switch (_view) {
    case favorite:
       order.append("name");
-      where.append("fav = 1");
+      where.append("favourite = 1");
       break;
       
    case most_played:
@@ -370,7 +371,7 @@ void lemon_menu::change_view(view_t view)
    
    if (!_show_hidden) {
       if (where.length() != 0) where.append(" AND ");
-      where.append("hide = 0");
+      where.append("hide = 0 AND missing = 0");
    }
    
    // assemble query
@@ -417,7 +418,7 @@ int sql_callback(void* obj, int argc, char **argv, char **colname)
          --i; // move iterator to the last item in list
          
          m = (menu*)*i;
-         
+
          // create new child menu of the genre strings don't match
          if (strcmp(m->text(), argv[3]) != 0) {
             m = new menu(argv[3]);
@@ -426,7 +427,7 @@ int sql_callback(void* obj, int argc, char **argv, char **colname)
       }
       
       m->add_child(g);
-      
+
       break;
    }
    

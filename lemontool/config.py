@@ -1,0 +1,1 @@
+DATABASENAME = 'games.db'
