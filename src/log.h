@@ -21,6 +21,7 @@
 #define LOG_H_
 
 #include <iostream>
+#include <cstdio>
 
 using namespace std;
 
