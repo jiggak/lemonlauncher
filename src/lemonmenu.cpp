@@ -195,7 +195,8 @@ void lemon_menu::handle_pgdown()
 
 void lemon_menu::handle_alphaup()
 {
-   if (_current->select_next_alpha()) {
+   // up in the alphabet is the previous letter
+   if (_current->select_previous_alpha()) {
       reset_snap_timer();
       render();
    }
@@ -203,7 +204,8 @@ void lemon_menu::handle_alphaup()
 
 void lemon_menu::handle_alphadown()
 {
-   if (_current->select_previous_alpha()) {
+   // down in the alphabet is the next letter
+   if (_current->select_next_alpha()) {
       reset_snap_timer();
       render();
    }
