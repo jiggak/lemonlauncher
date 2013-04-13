@@ -284,24 +284,16 @@ void lemon_menu::handle_run()
       string query("UPDATE games SET count = count+1 WHERE filename = ");
       query.append("'").append(g->rom()).append("'");
    
-      sqlite3* db = NULL;
       char* error_msg = NULL;
    
       try {
-         if (sqlite3_open(db_file.c_str(), &db))
-            throw bad_lemon(sqlite3_errmsg(db));
-         
-         // execute query and throw exception on error
-         if (sqlite3_exec(db, query.c_str(), NULL, NULL, &error_msg)
+         if (sqlite3_exec(_db, query.c_str(), NULL, NULL, &error_msg)
                != SQLITE_OK)
             throw bad_lemon(error_msg);
       } catch (...) {
          sqlite3_free(error_msg);
          throw;
       }
-      
-      if (db)
-         sqlite3_close(db);
    }
 }
 
