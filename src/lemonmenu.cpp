@@ -352,7 +352,7 @@ void lemon_menu::change_view(view_t view)
       break;
       
    case most_played:
-      order.append("count,name");
+      order.append("count DESC,name");
       where.append("count > 0");
       break;
       
