@@ -195,7 +195,8 @@ void lemon_menu::handle_pgdown()
 
 void lemon_menu::handle_alphaup()
 {
-   if (_current->select_next_alpha()) {
+   // up in the alphabet is the previous letter
+   if (_current->select_previous_alpha()) {
       reset_snap_timer();
       render();
    }
@@ -203,7 +204,8 @@ void lemon_menu::handle_alphaup()
 
 void lemon_menu::handle_alphadown()
 {
-   if (_current->select_previous_alpha()) {
+   // down in the alphabet is the next letter
+   if (_current->select_next_alpha()) {
       reset_snap_timer();
       render();
    }
@@ -284,24 +286,16 @@ void lemon_menu::handle_run()
       string query("UPDATE games SET count = count+1 WHERE filename = ");
       query.append("'").append(g->rom()).append("'");
    
-      sqlite3* db = NULL;
       char* error_msg = NULL;
    
       try {
-         if (sqlite3_open(db_file.c_str(), &db))
-            throw bad_lemon(sqlite3_errmsg(db));
-         
-         // execute query and throw exception on error
-         if (sqlite3_exec(db, query.c_str(), NULL, NULL, &error_msg)
+         if (sqlite3_exec(_db, query.c_str(), NULL, NULL, &error_msg)
                != SQLITE_OK)
             throw bad_lemon(error_msg);
       } catch (...) {
          sqlite3_free(error_msg);
          throw;
       }
-      
-      if (db)
-         sqlite3_close(db);
    }
 }
 
@@ -360,7 +354,7 @@ void lemon_menu::change_view(view_t view)
       break;
       
    case most_played:
-      order.append("count,name");
+      order.append("count DESC,name");
       where.append("count > 0");
       break;
       
